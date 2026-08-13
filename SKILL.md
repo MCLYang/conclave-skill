@@ -267,6 +267,11 @@ diff -r ~/.hermes/debates/conclave-YYYYMMDD-<slug> "$PWD/conclave-YYYYMMDD-<slug
 - `~/.hermes/debates/` remains the canonical archive; the working-directory copy is the user's working artifact.
 - If the user only asks for "the results", still export the full arena — briefs, round sources, verdicts, and votes are all part of the deliverable.
 
+### 5. One debate = one self-contained folder; follow-up debates get a NEW folder (user-mandated 2026-08-14)
+
+- **Consolidation**: at debate close, ALL files of the session (brief, constraints, mapping, preflight log, every round's raw+cleaned speeches, verdicts, sign-off votes, final.md, minutes.md, index.md) must live inside the single arena folder. No strays in /tmp, no loose copies elsewhere — the exported folder in the user's cwd is the complete, self-contained record.
+- **Follow-up / supplementary debates**: if the user later asks to continue, extend, or re-debate the same topic, do NOT reopen or append into the old arena. Run `init_debate.sh` again to create a fresh arena (same-day same-slug auto-appends `-N`, e.g. `conclave-20260814-burrypltr-2`), and put the previous arena's absolute path into the new `01_brief/brief.md` under a "Prior debate" heading so panelists can read the old final.md as input context. The old folder stays frozen as the historical record; the new debate's export goes to a separate folder in the cwd.
+
 ## Chair Neutrality Red Line
 
 - Synthesis must not weight a point just because the chair proposed it; chair views struck down must still be recorded under "rejected positions".

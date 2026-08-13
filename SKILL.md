@@ -254,6 +254,19 @@ After each debate, auto-generate `index.md` in the debate root:
 
 This index lets the user find key decisions in 10 seconds even after 3 months.
 
+### 4. Post-debate export to the user's working directory (mandatory, user-mandated 2026-08-14)
+
+After every debate, copy the ENTIRE arena directory (not just `09_deliver/`) into the session's current working directory, preserving the arena folder name:
+
+```bash
+cp -R ~/.hermes/debates/conclave-YYYYMMDD-<slug> "$PWD/"
+diff -r ~/.hermes/debates/conclave-YYYYMMDD-<slug> "$PWD/conclave-YYYYMMDD-<slug>" && echo "COPY VERIFIED"
+```
+
+- The diff verification is mandatory; report file count, total size, and the destination absolute path.
+- `~/.hermes/debates/` remains the canonical archive; the working-directory copy is the user's working artifact.
+- If the user only asks for "the results", still export the full arena — briefs, round sources, verdicts, and votes are all part of the deliverable.
+
 ## Chair Neutrality Red Line
 
 - Synthesis must not weight a point just because the chair proposed it; chair views struck down must still be recorded under "rejected positions".
@@ -277,3 +290,9 @@ This index lets the user find key decisions in 10 seconds even after 3 months.
 10. **Codex exec sandbox + shell expansion trap**: Wrapping a prompt in single quotes prevents `$(cat file)` expansion; Codex receives the literal string. Always use double quotes for shell expansion when passing file content inline.
 11. **Merge minority alternatives rather than overrule**: Claude and Qwen both opposed the chair's R3 draft but provided full rewritten text. Merging their specific amendments (ceiling 8, forced close, hold admissibility, classification appeal) produced a better final rule than either the original proposal or a pure adjudication.
 12. **Dynamic termination proved itself in practice**: This debate reached strategic convergence after R2; R3 functioned as a sign-off round. Total 3 rounds vs. the old fixed 5, validating the mechanism we were designing.
+
+## Field Lessons (2026-08-14 Burry AI-bubble debate)
+
+13. **Assign each panelist their letter explicitly in R2+ prompts**: Asking panelists to "recognize your own R1 stance" in the anonymized bundle failed — three of four CLIs misidentified themselves as Panelist A (the strongest position) in both R2 and R3. The persuasion was genuine, but the minutes had to log an anomaly. Fix: in R2+ prompts, state "You are Panelist X" directly; anonymity is preserved because the mapping file still hides which real CLI is X.
+14. **Chair-fetched live data beats panelist estimates**: The chair pulled real option quotes mid-debate (PLTR 150/120 spread $7.20 vs panelist-estimated $7.00; ORCL 140/110 $10.90 vs estimated $8.00 — a 36% miss). The real numbers directly changed the final contract counts. For any debate touching market/pricing data, the chair should inject a verified data pack into the brief AND re-verify before the final draft.
+15. **A GTC limit order can merge two opposing positions**: "Execute now" vs "wait for a dip" deadlocked until the chair ruled "place the order now at a limit price that only fills on a dip" — both sides' logic satisfied, zero round cost. When two panelists differ only on timing, look for an order-type / trigger mechanism that encodes both.

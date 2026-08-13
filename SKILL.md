@@ -75,15 +75,17 @@ After receiving the topic and before writing the brief, the chair self-audits: i
 - If a trajectory-altering question arises mid-debate (e.g., a divergence hinges on a fact only the user knows) → the chair may pause, ask the user via clarify, append the answer to the brief, and resume.
 - Do not force questions when there are none — if the topic is already clear, debate immediately; do not ritualize clarification.
 
-## Workflow (max 5 rounds, auto-partitioned into directories)
+## Workflow (dynamic rounds, auto-partitioned into directories)
 
 **Step 0 Init**: `bash ~/.hermes/skills/conclave/scripts/init_debate.sh <topic-slug>` → creates `~/.hermes/debates/conclave-YYYYMMDD-<slug>/`. All subsequent files land in this directory.
 
 ```
 R1 Positioning   → 5 agents in parallel, unseen by each other (prevent anchoring). Write to 02_r1/. Chair also writes a position.
 R2 Rebuttal      → Each agent receives the other four's R1 (anonymized). Task: identify ≥1 fatal flaw per opponent + self-defense. Write to 03_r2/.
-R3-R5 Convergence → Chair synthesizes consensus/divergence into 07_verdicts/verdict_rN.md; only divergence points are sent back.
-                   Each agent must "concede" or "rebut with evidence"; equivocation is prohibited. Write to 04_r3~06_r5/.
+R3+ Convergence  → Chair synthesizes consensus/divergence into 07_verdicts/verdict_rN.md; only divergence points are sent back.
+                   Each agent must "concede" or "rebut with evidence"; equivocation is prohibited. Write to 04_r3~08_signoff/.
+                   Termination may occur as early as R3 if strategic divergence is resolved and every objection carries an executable alternative.
+                   Hard ceiling: 8 rounds (including R1 and R2).
 ```
 
 Round reference files:
@@ -98,10 +100,68 @@ Constructive Opposition Iron Rule (user-mandated, applies to all rounds):
 - Objection + reason without solution = invalid speech; the chair names and sends it back for rewrite; it does not count toward the round's output.
 - When rebutting others in R2, you must give "how would you fix it"; in R3-R5, alternatives and new evidence are both mandatory.
 
-Convergence Rules (user-mandated):
-- Max 5 rounds (including R1 and R2).
-- If divergence points drop to zero after any round → go straight to sign-off.
-- If objections remain after Round 5 → **chair mandatory adjudication**, minority opinions appended verbatim to the final report.
+## Convergence Rules (user-mandated)
+
+### Round bounds
+- Floor: 2 rounds (R1 + R2). High-risk topics (architecture, security,
+  irreversible migration) floor: 3 rounds.
+- Ceiling: 8 rounds, hard. Sub-debate rounds count toward this ceiling.
+- Risk level is declared by the chair at the end of R1. If any panelist
+  disputes the level, the topic is treated as high-risk. Default when
+  unclear: high-risk.
+- Termination evaluation begins only after the applicable floor round.
+- Dynamic termination: the chair may terminate early when all remaining
+  divergence points are parametric/executional and every objection carries
+  an executable alternative. Hard floor still applies.
+
+### Divergence ledger
+Chair maintains after each round: item ID, description, level
+(strategic / structural / parametric / executional), status
+(open / resolved / suspended / accepted-risk), alternative, verifiable
+resolution criterion, proposer, first-seen round.
+
+### Termination (all four required)
+1. No open strategic- or structural-level items.
+2. The most recent round produced no new substantive disagreement
+   (chair-classified; restatements of existing disagreements do not count).
+   Any panelist may object once per round to the chair's "restatement, not
+   new" classification. The objection forces the item into the ledger as
+   open; the chair must then close it on substance, not on classification.
+3. No admissible unresolved structural hold.
+4. No user veto.
+
+### Structural hold admissibility
+- A structural hold must name (a) the affected interface, data-model
+  field, or failure mode, and (b) a verifiable criterion under which it
+  would be resolved. A hold missing either is recorded as parametric and
+  does not block termination.
+- Each panelist may have at most 2 active structural holds at a time.
+- Release: proposer confirms downgrade, OR another panelist seconds the
+  downgrade, OR — after the same hold has been re-asserted in two
+  consecutive rounds with no new evidence — the chair overrules it with a
+  written reason recorded in the ledger and carried into the sign-off.
+
+### Forced close
+Trigger, whichever comes first: (a) the ceiling round is reached, or
+(b) two consecutive rounds add zero new strategic- or structural-level
+items. On trigger the chair closes the debate and records every remaining
+open item in the sign-off as a known unresolved risk with trigger
+conditions and a rollback plan. Forced close is a valid termination.
+
+### Stalemate
+An item that stays strategic-level for two consecutive rounds with no
+party conceding: chair must either (a) record it as accepted-risk with
+trigger conditions and rollback plan, or (b) spin off a focused
+sub-debate (max 2 rounds, relevant panelists only).
+
+### Rollout (non-blocking)
+Adopt immediately behind flag `convergence: dynamic` (defaults: floor
+2/3, ceiling 8). Per debate, log: rounds used; the round at which the old
+5-round rule would have stopped; every strategic/structural item first
+seen after round 2. Review after 10 logged debates.
+Escape defect := a strategic- or structural-level item first seen in a
+round that the compared rule would have cut, AND which later required a
+post-sign-off change.
 
 Sign-off (not counted as a round):
 - Final draft sent to all five agents; each may only reply `Agree` or `Oppose + specific clause + specific reason + own alternative`.
@@ -120,10 +180,13 @@ External Advisor (Manus):
 - mapping.md is generated by the chair and kept secret for the session; the user may inspect it at any time.
 - Chair synthesis quotes only "Panelist X"; the final report may disclose real-name stances (user requests transparency).
 
-## Disconnection Rules (user-mandated: retry immediately)
+## Disconnection Rules (user-mandated: explicit retry count)
 
-- Any agent call failure in any round (timeout / 401 / crash) → **immediate identical retry**.
-- 2 consecutive failures → mark that agent absent for that round; debate continues; final report notes absent party and reason; fix after the session, restore for the next debate.
+- **Per-agent per-round maximum: 2 calls** (1 original + 1 retry). No infinite retry loops.
+- First failure (timeout / 401 / crash / empty output / max-turns reached) → **immediate retry**.
+  - If the failure is parameter-related (e.g., Claude "Reached max turns"), **adjust the parameter first** (raise `--max-turns`, add `--allowedTools ''`, etc.) before retrying. This corrected call counts as the retry.
+  - Otherwise, use an identical retry.
+- Second consecutive failure → mark that agent **absent for that round**. Debate continues; final report notes absent party and reason; fix after the session, restore for the next debate.
 - Chair (Hermes) never disconnects; Manus advisor timeout 30 min → skip advisor, final report notes "external advisor not reviewed".
 
 ## Language Rule (user-mandated)
@@ -186,3 +249,11 @@ This index lets the user find key decisions in 10 seconds even after 3 months.
 5. **R1 same direction = high-confidence signal**: when five agents independently position unseen, if they independently pick the same direction / same approach, that judgment's credibility maxes out; synthesis can directly promote it to "consensus" without further debate. Conversely, points where R1 diverges are real divergence, worth spending round budget on.
 6. **Session cost & pace expectation**: one full Conclave session (clarification → R1 → R2 → convergence → sign-off × N) is roughly 30-50 CLI calls, 1.5-3 wall-clock hours. Codex medium/low effort is fast enough; Claude long answers may take 10+ minutes per session. Run everything in background parallel + notify_on_complete; the chair writes its own draft while waiting.
 7. **Highest-value use of audit-type panelist**: let the most rigorous panelist's (this session was Claude) objections directly rewrite final numbers, not just serve as QC — this session's six fatal arithmetic errors + one payment reallocation (breakeven 93% → 86%) all came from its opposition votes.
+
+## Field Lessons (2026-08-13 Self-optimization session)
+
+8. **Self-debate is valid and efficient**: Using Conclave to optimize its own SKILL.md produced actionable output in 3 rounds. The chair must be willing to concede ground when the audit-type panelist's objections are structurally sound.
+9. **Shell parameter escaping is a real failure mode**: Multi-line prompts containing backticks (e.g., markdown code blocks) passed through `zsh -i -c "..."` are interpreted as command substitution by the outer shell. Use Python `subprocess` with `shlex.quote`, or strip backticks from prompts.
+10. **Codex exec sandbox + shell expansion trap**: Wrapping a prompt in single quotes prevents `$(cat file)` expansion; Codex receives the literal string. Always use double quotes for shell expansion when passing file content inline.
+11. **Merge minority alternatives rather than overrule**: Claude and Qwen both opposed the chair's R3 draft but provided full rewritten text. Merging their specific amendments (ceiling 8, forced close, hold admissibility, classification appeal) produced a better final rule than either the original proposal or a pure adjudication.
+12. **Dynamic termination proved itself in practice**: This debate reached strategic convergence after R2; R3 functioned as a sign-off round. Total 3 rounds vs. the old fixed 5, validating the mechanism we were designing.

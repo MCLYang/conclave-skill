@@ -1,53 +1,53 @@
-# Conclave（辩经）轮次提示词模板
+# Conclave Round Prompt Templates
 
-## R2 互驳
+## R2 Rebuttal
 
 ```
-你是五家匿名辩手之一。这是 R1 立论阶段其余四家的发言（已匿名）：
+You are one of five anonymous panelists. Below are the R1 position statements from the other four panelists (anonymized):
 - {arena}/02_r1/r1_A.md
 - {arena}/02_r1/r1_B.md
 - {arena}/02_r1/r1_C.md
 - {arena}/02_r1/r1_D.md
-你的 R1 立场见 {arena}/02_r1/r1_你.md。
+Your own R1 position is in {arena}/02_r1/r1_You.md.
 
-任务：
-1. 逐家驳斥：对每家指出至少一个硬伤（逻辑漏洞/数据错误/忽略约束），引用其原文——**并且必须给出"如果是你会怎么改"的解决方案**；只批不给方案 = 无效发言，打回重写。
-2. 自辩：预判你的立场最可能被攻击的点，先给出辩护。
-3. 禁止人身攻击，只打观点。禁止和稀泥。
-4. 全文输出到 stdout，中文。
+Task:
+1. Rebut each opponent: identify at least one fatal flaw (logical gap / data error / ignored constraint), quote their original text — and you **must** provide "how you would fix it" as your solution; criticism without a solution = invalid speech, sent back for rewrite.
+2. Self-defense: anticipate the most likely attacks on your own position and defend them proactively.
+3. No personal attacks; attack only arguments. No equivocation.
+4. Output the full text to stdout. Use the language specified in the brief.
 ```
 
-## R3-R5 收敛
+## R3-R5 Convergence
 
 ```
-当前未收敛的分歧点如下（主席综判后提取，见 {arena}/07_verdicts/verdict_rN.md）：
-{分歧点清单，每条附各方立场与证据位置}
+The currently unresolved divergence points are listed below (extracted from the chair's synthesis; see {arena}/07_verdicts/verdict_rN.md):
+{Divergence list, each with stances and evidence locations from all sides}
 
-规则：对每个分歧点，你必须二选一：
-a) 让步——明确说"此点我让步"，可附保留说明；
-b) 举证反驳——给出新证据或新逻辑，**同时必须给出你的替代方案**（你认为应该怎么定）；重复老话或只驳不立算违规。
-禁止和稀泥（"各有道理"视为拒绝收敛，主席将记你违规一次）。
-全文输出到 stdout，中文。
+Rules: for each divergence point, you must choose one of:
+a) Concede — explicitly state "I concede on this point", optionally with a reservation note;
+b) Rebut with evidence — provide new evidence or new logic, and **you must simultaneously provide your alternative** (what you think the correct decision should be); repeating old arguments or criticizing without proposing an alternative counts as a violation.
+Equivocation ("both sides have merit") is treated as refusal to converge; the chair will record one violation against you.
+Output the full text to stdout. Use the language specified in the brief.
 ```
 
-## 会签
+## Sign-off
 
 ```
-这是主席拟的终稿草案：{arena}/08_signoff/final_draft.md
-你只许回答两种之一：
-- "同意"
-- "反对" + 具体条款 + 具体理由 + 你的替代方案（你认为应该怎么改/怎么做）
-只反对不给替代方案 = 无效票，视同未表态。
-全文输出到 stdout，中文。
+This is the chair's proposed final draft: {arena}/08_signoff/final_draft.md
+You may reply with exactly one of the following:
+- "Agree"
+- "Oppose" + specific clause + specific reason + your alternative (what you think should be changed and how)
+Opposition without an alternative = invalid vote, treated as abstention.
+Output the full text to stdout. Use the language specified in the brief.
 ```
 
-## Manus 外援顾问
+## Manus External Advisor
 
 ```
-一场五家 AI 辩论已收敛出终稿草案（附后）。你是独立外援顾问，只做一件事：
-检查这份终稿有无"硬伤级"问题——事实错误、逻辑矛盾、违反约束、遗漏重大风险。
-若有：逐条列出并给依据。若无：回复"无硬伤"。
-请首行注明所审版本号：纨 R7-draft-N。
-草案如下：
-{final_draft 全文 + 各轮综判摘要}
+A five-agent AI debate has converged on a final draft (attached). You are an independent external advisor. Do one thing only:
+Check whether the final draft contains any "fatal-level" issues — factual errors, logical contradictions, constraint violations, or omitted major risks.
+If yes: list each item with evidence. If no: reply "No fatal issues".
+Please state the reviewed version number on the first line: e.g., v1.2-draft-3.
+Draft follows:
+{full final_draft text + round-by-round synthesis summary}
 ```

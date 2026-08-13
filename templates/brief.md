@@ -1,19 +1,19 @@
-# 立题简报：{话题}
+# Brief: {topic}
 
-## 背景
-{用户给的背景，主席补全到"自包含"——辩手看不到本对话，所有必要信息必须写在这里}
+## Background
+{Background provided by the user, augmented by the chair to be self-contained — panelists cannot see this conversation, so all necessary information must be written here}
 
-## 约束条件
-- {预算/时间/红线/既有决定等}
+## Constraints
+- {Budget / timeline / red lines / existing decisions, etc.}
 
-## 要裁决的问题
-1. {问题一}
-2. {问题二}
+## Questions to Adjudicate
+1. {Question one}
+2. {Question two}
 
-## 你的任务
-你是五家匿名辩手之一。针对上述问题给出你的完整立场：
-- 结论先行
-- 每个主张给依据（数据/逻辑/案例）
-- 主动指出你自己方案的最大风险
-- 全文输出到 stdout，不要写任何文件
-- 语言：中文
+## Your Task
+You are one of five anonymous panelists. Give your complete position on the above questions:
+- Lead with the conclusion
+- Provide evidence for every claim (data / logic / case study)
+- Proactively identify the biggest risk in your own proposal
+- Output the full text to stdout; do not write any files
+- Language: {match the user's current session language; do not default to English}

@@ -1,14 +1,14 @@
 #!/bin/bash
-# Conclave（辩经）赛前点火试验：五家各 ping 一次，全通才开辩。
-# 用法: bash preflight.sh [<辩论场路径>]
-#   若不传路径，只做点火不落盘日志。
-#   若传路径，点火结果写进 00_preflight/preflight.log。
+# Conclave pre-flight check: ping all four agents once; start the debate only when all are reachable.
+# Usage: bash preflight.sh [<arena-path>]
+#   If no path is given, only pings without writing a log.
+#   If a path is given, results are written to 00_preflight/preflight.log.
 set -u
 
 ARENA="${1:-}"
 PASS=0; FAIL=0
-ok()  { echo "  [通] $1"; PASS=$((PASS+1)); }
-bad() { echo "  [断] $1 —— $2"; FAIL=$((FAIL+1)); }
+ok()  { echo "  [OK] $1"; PASS=$((PASS+1)); }
+bad() { echo "  [FAIL] $1 — $2"; FAIL=$((FAIL+1)); }
 
 LOG=""
 append_log() { LOG="${LOG}$1\n"; }
@@ -33,24 +33,24 @@ OUT=$(CONDA_NO_PLUGINS=true no_proxy='*' qwen -p 'reply with one word: pong' 2>&
 echo "$OUT" | grep -qi pong && ok qwen || bad qwen "$(echo "$OUT" | head -2)"
 append_log "qwen: $(echo "$OUT" | grep -qi pong && echo pong || echo fail)"
 
-echo "== Manus 外援 ==  (需主席手动跑 mcp__manus_mcp__create_task 最小任务验证，本脚本覆盖不了)"
+echo "== Manus External Advisor ==  (The chair must manually verify via mcp__manus_mcp__create_task; this script cannot cover it.)"
 append_log "manus: manual"
 
 echo
-echo "结果: $PASS 通 / $FAIL 断"
-[ "$FAIL" -eq 0 ] && echo "可以开辩" || echo "先修断线方再开辩"
+echo "Result: $PASS OK / $FAIL FAIL"
+[ "$FAIL" -eq 0 ] && echo "Ready to debate" || echo "Fix disconnected agents before debating"
 
-# 若传了辩论场路径，落盘
+# If an arena path was provided, write the log to disk
 if [ -n "$ARENA" ] && [ -d "$ARENA/00_preflight" ]; then
   NOW=$(date '+%Y-%m-%d %H:%M:%S')
   cat > "$ARENA/00_preflight/preflight.log" << EOF
 # Preflight Log
-- 时间: $NOW
-- 结果: $PASS 通 / $FAIL 断
+- Time: $NOW
+- Result: $PASS OK / $FAIL FAIL
 
 $(echo -e "$LOG")
 
-$( [ "$FAIL" -eq 0 ] && echo "状态: 可以开辩" || echo "状态: 先修断线方再开辩" )
+$( [ "$FAIL" -eq 0 ] && echo "Status: Ready to debate" || echo "Status: Fix disconnected agents before debating" )
 EOF
-  echo "已写入: $ARENA/00_preflight/preflight.log"
+  echo "Written to: $ARENA/00_preflight/preflight.log"
 fi

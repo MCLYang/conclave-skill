@@ -1,31 +1,30 @@
 #!/bin/bash
-# init_debate.sh — 一键创建辩论场目录
-# 用法: bash init_debate.sh <话题简称>
-# 例:  bash init_debate.sh medlibya
+# init_debate.sh — one-click arena creation
+# Usage: bash init_debate.sh <topic-slug>
+# Example: bash init_debate.sh medlibya
 
 set -e
 
 TOPIC=${1:-}
 if [ -z "$TOPIC" ]; then
-  echo "用法: bash init_debate.sh <话题简称>"
-  echo "  例: bash init_debate.sh medlibya"
+  echo "Usage: bash init_debate.sh <topic-slug>"
+  echo "  Example: bash init_debate.sh medlibya"
   exit 1
 fi
 
-# 去除非法字符，限小写字母数字和连字符
+# Sanitize: lowercase letters, digits, and hyphens only
 TOPIC=$(echo "$TOPIC" | tr '[:upper:]' '[:lower:]' | tr -cd 'a-z0-9-')
 if [ -z "$TOPIC" ]; then
-  echo "错误: 话题简称无效，只能用英文小写、数字、连字符"
+  echo "Error: invalid topic slug. Use only lowercase English letters, digits, and hyphens."
   exit 1
 fi
 
 DATE=$(date +%Y%m%d)
 ROOT="$HOME/.hermes/debates"
-BASE="$ROOT/bianjing-$DATE-$TOPIC"
+BASE="$ROOT/conclave-$DATE-$TOPIC"
 
-# 检查同名冲突
+# Handle name collision
 if [ -d "$BASE" ]; then
-  # 追加 -2, -3 等
   N=2
   while [ -d "$BASE-$N" ]; do
     N=$((N+1))
@@ -36,71 +35,71 @@ fi
 mkdir -p "$BASE"
 cd "$BASE"
 
-# 创建目录结构
+# Create directory structure
 mkdir -p 00_preflight 01_brief 02_r1 03_r2 04_r3 05_r4 06_r5 07_verdicts 08_signoff 09_deliver
 
-# 创建初始文件
+# Create starter files
 NOW=$(date '+%Y-%m-%d %H:%M:%S')
 cat > index.md << EOF
-# 辩论索引: bianjing-$DATE-$TOPIC
+# Debate Index: conclave-$DATE-$TOPIC
 
-- 创建时间: $NOW
-- 话题简称: $TOPIC
-- 完整路径: $BASE
+- Created: $NOW
+- Topic slug: $TOPIC
+- Full path: $BASE
 
-## 目录结构
+## Directory Structure
 
-| 目录 | 说明 |
-|-------|------|
-| 00_preflight/ | 赛前点火 |
-| 01_brief/ | 立题简报 + 匿名映射 + 用户约束 |
-| 02_r1/ | R1 立论 |
-| 03_r2/ | R2 互驳 |
-| 04_r3~06_r5/ | 收敛轮（按需创建） |
-| 07_verdicts/ | 主席各轮综判 |
-| 08_signoff/ | 会签草案 + 各家签罩 |
-| 09_deliver/ | 终稿 + 会议纪要 |
+| Directory | Purpose |
+|-----------|---------|
+| 00_preflight/ | Pre-flight pings |
+| 01_brief/ | Brief + anonymity mapping + user constraints |
+| 02_r1/ | R1 positioning |
+| 03_r2/ | R2 rebuttals |
+| 04_r3~06_r5/ | Convergence rounds (created on demand) |
+| 07_verdicts/ | Chair synthesis per round |
+| 08_signoff/ | Sign-off draft + individual votes |
+| 09_deliver/ | Final report + meeting minutes |
 
-## 时间线
+## Timeline
 
-| 时间 | 事件 | 文件 |
-|------|------|------|
-| $NOW | 辩论场创建 | 本索引 |
+| Time | Event | File |
+|------|-------|------|
+| $NOW | Arena created | This index |
 
-## 关键裁决速查
+## Key Decisions Quick-Reference
 
-（待辩论结束后填写）
+(To be filled after the debate concludes)
 EOF
 
 cat > 01_brief/brief.md << 'EOF'
-# 立题简报
+# Brief
 
-（待填写：辩题、背景、约束条件、需决策的问题）
+(To be filled: topic, background, constraints, and the decision(s) to be made)
 EOF
 
 cat > 01_brief/mapping.md << 'EOF'
-# 匿名映射表
+# Anonymity Mapping
 
-| 辩手代号 | 真实身份 | 备注 |
-|-----------|----------|------|
-| A | （待填写） | |
-| B | （待填写） | |
-| C | （待填写） | |
-| D | （待填写） | |
-| E | Hermes | 主席兼辩手 |
+| Code | Real Identity | Notes |
+|------|---------------|-------|
+| A | (to be filled) | |
+| B | (to be filled) | |
+| C | (to be filled) | |
+| D | (to be filled) | |
+| E | Hermes | Chair & panelist |
 EOF
 
 cat > 01_brief/constraints.md << 'EOF'
-# 澄清环节约束
+# Clarification Constraints
 
-（待填写：用户的回答/裁定，每条注明对结果的塑造作用）
+(To be filled: user answers / rulings from the clarification phase, each annotated with how it shapes the outcome)
 EOF
 
-echo "✓ 辩论场创建成功: $BASE"
-echo "  目录结构:"
+echo "✓ Arena created: $BASE"
+echo "  Directory structure:"
 find "$BASE" -maxdepth 1 -type d | sort | sed "s|$BASE/|    |"
 echo ""
-echo "  下一步:"
-echo "    1. 填写 01_brief/brief.md"
-echo "    2. 填写 01_brief/mapping.md"
-echo "    3. 跑 bash ~/.hermes/skills/bianjing/scripts/preflight.sh $BASE"
+echo "  Next steps:"
+echo "    1. Fill 01_brief/brief.md"
+echo "    2. Fill 01_brief/mapping.md"
+echo "    3. Run bash ~/.hermes/skills/conclave/scripts/preflight.sh $BASE"

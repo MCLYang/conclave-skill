@@ -62,9 +62,10 @@ Five starting agents + one external advisor. All CLI calls require `no_proxy='*'
 - Timeout 30 min with no response → skip the advisor step; final report notes "external advisor not reviewed".
 - Ping: send a minimal task "reply with one word: pong" (mode="speed"); receiving a task_id means the channel is open.
 - 2026-08-12 verified: this MCP only exposes create_task / create_webhook / delete_webhook.
-  **There is no tool to query task results.** Two ways to retrieve results:
-  a) create_webhook to register a callback and wait for the push (used in formal debates);
-  b) give the task_url to the user and ask them to paste the advisor's opinion from the Manus web UI (fallback).
+  **There is no MCP tool to query task results. BUT (2026-08-14 verified): the same MANUS_MCP_API_KEY works against the REST API directly, making results fully retrievable without webhooks:**
+  - Create: `POST https://api.manus.im/v1/tasks` with header `API_KEY: <key>`, body `{"prompt": "...", "taskMode": "chat"}` → returns `task_id`.
+  - Poll: `GET https://api.manus.im/v1/tasks/{task_id}` with the same header every 60s until `status == "completed"`; extract text from `output[]` where `role == "assistant"` → `content[].text`.
+  - Typical review turnaround: ~3 minutes. This is the preferred path on CLI-only machines; keep the webhook/user-paste routes as fallbacks only.
 
 ## General Rules
 

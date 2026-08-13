@@ -12,12 +12,13 @@ Five starting agents + one external advisor. All CLI calls require `no_proxy='*'
 - Command: `no_proxy='*' claude -p '<prompt>' --max-turns 1`
 - Auth: official OAuth (zhang@testsprite.com), credentials stored in macOS login keychain.
   Background sessions may fail to read the keychain (security exit 36).
-  **DO NOT put passwords in prompts or scripts.** The user must manually unlock the keychain in an interactive terminal before starting a background debate session:
+  **DO NOT put passwords in prompts or scripts.** The user must manually unlock the keychain in an interactive terminal before starting a background debate session (macOS only; N/A on Linux/Windows where only `~/.claude/.credentials.json` is checked):
   ```
   security unlock-keychain ~/Library/Keychains/login.keychain-db
   ```
   If still 401: check for and move aside old `~/.claude/.credentials.json`, then retry.
 - Update: `claude update`
+- Install: `npm install -g @anthropic-ai/claude-code` (or run `scripts/install.sh` to install everything at once)
 - Ping: `no_proxy='*' claude -p 'reply with one word: pong' --max-turns 1`
 
 ## 3. Codex
@@ -28,25 +29,29 @@ Five starting agents + one external advisor. All CLI calls require `no_proxy='*'
   `requires_openai_auth = false`, `wire_api = "responses"`, `base_url = "https://cmdme.cn"`.
 - Pitfall: exec defaults to a read-only sandbox; file writes are rejected → prompts must require "full text to stdout",
   and the chair extracts the output via `process(action='log', offset=0, limit=400)` to disk.
-- Update: `codex update`
+- Update: `codex update` (or `npm install -g @openai/codex@latest` when npm-managed)
+- Install: `npm install -g @openai/codex`
 - Ping: `no_proxy='*' codex exec --skip-git-repo-check 'reply with one word: pong'`
 
 ## 4. Gemini CLI
 
 - Command: `no_proxy='*' GEMINI_CLI_TRUST_WORKSPACE=true zsh -i -c 'gemini -p "<prompt>"'`
+  (On Linux/Windows without zsh, preflight.sh auto-falls back to `bash -i -c` — both source rc files for env keys.)
 - Pitfall: since 0.55.1 a trust-directory check was added; non-interactive calls must carry `GEMINI_CLI_TRUST_WORKSPACE=true`, otherwise the CLI refuses to run.
 - Auth / env: `GOOGLE_GEMINI_BASE_URL` + `GEMINI_API_KEY` (persisted in user shell rc).
   Key format determines provider: `AQ.Ab8…` = Google official (base generativelanguage.googleapis.com),
   `sk-…` = cmdme relay. Mixing them causes 401.
   Note: non-interactive shells may not read rc files — call via `zsh -i -c` or explicitly export variables.
-- Update: see official Gemini CLI docs for latest install command.
+- Update: `npm install -g @google/gemini-cli@latest`
+- Install: `npm install -g @google/gemini-cli`
 - Ping: `no_proxy='*' GEMINI_CLI_TRUST_WORKSPACE=true zsh -i -c 'gemini -p "reply with one word: pong"'`
 
 ## 5. Qwen
 
 - Command: `no_proxy='*' qwen -p '<prompt>'`
 - Binary lives in ~/.local/lib/qwen-code (official installer layout).
-- Update: see official Qwen docs for latest install command.
+- Update: `npm install -g @qwen-code/qwen-code@latest` when npm-managed; otherwise `qwen update`
+- Install: `npm install -g @qwen-code/qwen-code`
 - Ping: `no_proxy='*' qwen -p 'reply with one word: pong'`
 
 ## 6. Manus (External Advisor, async)
@@ -66,4 +71,4 @@ Five starting agents + one external advisor. All CLI calls require `no_proxy='*'
 1. All calls are non-interactive (`-p` / `exec`), no TUI; use `terminal(background=true, notify_on_complete=true)` when parallelizing.
 2. Long texts go to disk; prompts only give paths.
 3. Any disconnection: immediate identical retry; 2 consecutive failures → mark absent, note in final report.
-4. Pre-flight `scripts/preflight.sh` is mandatory before every debate; do not start until all agents are reachable.
+4. On a new machine or after any CLI failure, run `scripts/install.sh` first — it detects and installs all CLIs/dependencies, then lists exactly which provider keys the user must configure. Pre-flight `scripts/preflight.sh` (update + ignition ping) is mandatory before every debate; do not start until all agents are reachable.

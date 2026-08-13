@@ -1,7 +1,7 @@
 # Conclave
 
 [![Hermes Skill](https://img.shields.io/badge/Hermes-Skill-blue)](https://github.com/MCLYang/conclave-skill)
-[![Version](https://img.shields.io/badge/version-1.2.0-green)]()
+[![Version](https://img.shields.io/badge/version-0.1.4-green)]()
 
 > **Conclave** is a multi-agent reasoning skill that orchestrates multiple AI CLIs into structured debates. Each agent independently analyzes the problem, challenges competing arguments, identifies flaws and contradictions, and refines the reasoning through multiple rounds of discussion — helping you reach more reliable conclusions than relying on a single AI.
 
@@ -31,10 +31,14 @@
 ## Quick Start
 
 ```bash
+# 0. First time on this machine? Detect + install all CLIs/dependencies,
+#    then configure each provider key it flags as [ACTION]
+bash ~/.hermes/skills/conclave/scripts/install.sh
+
 # 1. Initialize a debate arena
 bash ~/.hermes/skills/conclave/scripts/init_debate.sh <topic-slug>
 
-# 2. Pre-flight check (verify all five CLIs are reachable)
+# 2. Pre-flight check (update all CLIs, then ignition-ping every agent)
 bash ~/.hermes/skills/conclave/scripts/preflight.sh <arena-path>
 
 # 3. Load the skill in a Hermes session and launch the debate
@@ -102,7 +106,7 @@ Delivery         → final.md + minutes.md land in 09_deliver/
 
 ## Installation
 
-Install via the Hermes skills hub or clone from the source repository.
+Install via the Hermes skills hub or clone from the source repository. Then run `bash ~/.hermes/skills/conclave/scripts/install.sh` to set up the four panelist CLIs and their dependencies — it auto-detects macOS, Linux, WSL, and Windows (Git Bash/MSYS2) and tells you exactly which provider keys to configure.
 
 ---
 

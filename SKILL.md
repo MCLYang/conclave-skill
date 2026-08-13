@@ -1,7 +1,7 @@
 ---
 name: conclave
 description: "Conclave is a multi-agent reasoning skill that orchestrates multiple AI CLIs into structured debates. Each agent independently analyzes the problem, challenges competing arguments, identifies flaws and contradictions, and refines the reasoning through multiple rounds of discussion — helping you reach more reliable conclusions than relying on a single AI."
-version: 1.2.0
+version: 0.1.4
 author: Hermes Agent
 metadata:
   hermes:
@@ -39,14 +39,20 @@ Use for high-stakes decisions (pricing structure, contract risk, architecture se
 
 ## Pre-Game (mandatory before the first debate of each skill activation)
 
+0. **Environment check** (first activation, new machine, or after any CLI failure): run `bash ~/.hermes/skills/conclave/scripts/install.sh`
+   - Detects OS (macOS / Linux / WSL / Windows Git Bash) and Node.js/npm + all four CLIs; auto-installs anything missing (brew on macOS, apt/dnf/pacman on Linux, manual instructions on Windows).
+   - Then audits each provider's auth material (existence only — no secrets read) and prints an ACTION checklist.
+   - If any `[ACTION]` line appears: **STOP — ask the user to configure that provider's key/OAuth first** (exact steps in `references/panelists.md`). No debate until every provider is configured.
+   - `--check-only` audits without installing.
 1. **Initialize the arena**: run `bash ~/.hermes/skills/conclave/scripts/init_debate.sh <topic-slug>`
    - Auto-creates `~/.hermes/debates/conclave-YYYYMMDD-<slug>/`
    - Generates the full directory structure + starter template files (brief.md / mapping.md / constraints.md / index.md)
 2. **Fill the brief**: write brief.md, mapping.md, and constraints.md under `01_brief/`.
 3. **Version & parameter check**: see `references/panelists.md` (commands, parameters, auth pitfalls for each agent).
-4. **Pre-flight**: run `bash ~/.hermes/skills/conclave/scripts/preflight.sh <arena-path>`
-   - Pings all four agents (plus Manus); results are auto-written to `00_preflight/preflight.log`.
-   - Any failure: fix first (key / proxy / version), then debate.
+4. **Pre-flight (update + ignition)**: run `bash ~/.hermes/skills/conclave/scripts/preflight.sh <arena-path>`
+   - Phase A: best-effort self-update of all four CLIs (failures are non-fatal and logged; `--skip-update` bypasses).
+   - Phase B: ignition ping of all four agents (plus Manus, verified manually); results are auto-written to `00_preflight/preflight.log`.
+   - Any ping failure: fix first (key / proxy / version), then debate.
 5. **Launch the debate**: use `terminal(background=true)` to spawn the four CLIs in parallel, writing outputs to `02_r1/`.
 
 ## Arena Directory (one isolated folder per debate, auto-named)

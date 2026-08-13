@@ -46,44 +46,19 @@ Use for high-stakes decisions (pricing structure, contract risk, architecture se
 
 ### Directory Structure
 
-```
-~/.hermes/debates/conclave-20260813-medlibya/
-├── 00_preflight/
-│   └── preflight.log          # Pre-flight ping results
-├── 01_brief/
-│   ├── brief.md               # Brief (read by all five agents)
-│   ├── mapping.md             # Anonymity mapping (A~E ↔ identity)
-│   └── constraints.md         # Clarification answers / user rulings
-├── 02_r1/
-│   ├── r1_hermes.md
-│   ├── r1_claude.md
-│   ├── r1_codex.md
-│   ├── r1_gemini.md
-│   └── r1_qwen.md
-├── 03_r2/
-│   ├── r2_claude.md
-│   ├── r2_codex.md
-│   ├── r2_gemini.md
-│   └── r2_qwen.md
-├── 04_r3/                     # Convergence rounds (created on demand)
-├── 05_r4/
-├── 06_r5/
-├── 07_verdicts/
-│   ├── verdict_r1.md          # Chair synthesis per round
-│   ├── verdict_r2.md
-│   └── verdict_final.md       # Final adjudication
-├── 08_signoff/
-│   ├── final_draft.md         # Final draft for sign-off
-│   ├── signoff_claude.md
-│   ├── signoff_codex.md
-│   ├── signoff_gemini.md
-│   ├── signoff_qwen.md
-│   └── signoff_hermes.md
-├── 09_deliver/
-│   ├── final.md               # Final report (deliverable 1)
-│   └── minutes.md             # Meeting minutes (deliverable 2)
-└── index.md                   # Full index: timeline + file map + key decisions quick-reference
-```
+| Path | Purpose |
+|------|---------|
+| `00_preflight/` | Pre-flight ping results |
+| `01_brief/` | Brief + anonymity mapping + user constraints |
+| `02_r1/` | R1 positioning (5 agents) |
+| `03_r2/` | R2 rebuttals |
+| `04_r3/` | Convergence round 3 |
+| `05_r4/` | Convergence round 4 |
+| `06_r5/` | Convergence round 5 |
+| `07_verdicts/` | Chair synthesis per round |
+| `08_signoff/` | Final draft + individual votes |
+| `09_deliver/` | Final report + meeting minutes |
+| `index.md` | Full index: timeline, file map, key decisions |
 
 ### File Discipline
 - **Long texts go to disk**; prompts only give paths — do not stuff long text into command-line arguments.
@@ -207,7 +182,7 @@ This index lets the user find key decisions in 10 seconds even after 3 months.
 1. **External advisor opinions must carry a version number**: Manus reviewed an old draft; half its opinions were already resolved — attach a version number when sending the advisor task, and require the first line of the opinion to state the reviewed version; otherwise you waste a round.
 2. **Audit-type panelist (e.g., Claude) objection depth increases per round**: structure → parameters → footnotes, always able to dig deeper. The chair must adjudicate closure when "objections have degraded to parameter-level and alternatives are directly absorbable"; otherwise there is no convergence. Closure standard: no strategic-level divergence + all objections have absorbable alternatives.
 3. **`claude -p --max-turns 1` occasionally reports "Reached max turns"**: when retrying per disconnection rules, raise `--max-turns` to 3-10 (add `--allowedTools ''` to prevent spinning); do not stick to the original parameter.
-4. **CLI output cleaning**: CLI stdout mixes ANSI codes and shell startup noise (local .zshrc conda plugin errors); clean with regex before anonymizing, otherwise read_file may judge the file binary.
+4. **CLI stdout handling**: CLI stdout mixes ANSI codes and shell startup noise (local shell rc plugin errors); normalize with regex before anonymizing, otherwise read_file may judge the file binary.
 5. **R1 same direction = high-confidence signal**: when five agents independently position unseen, if they independently pick the same direction / same approach, that judgment's credibility maxes out; synthesis can directly promote it to "consensus" without further debate. Conversely, points where R1 diverges are real divergence, worth spending round budget on.
 6. **Session cost & pace expectation**: one full Conclave session (clarification → R1 → R2 → convergence → sign-off × N) is roughly 30-50 CLI calls, 1.5-3 wall-clock hours. Codex medium/low effort is fast enough; Claude long answers may take 10+ minutes per session. Run everything in background parallel + notify_on_complete; the chair writes its own draft while waiting.
 7. **Highest-value use of audit-type panelist**: let the most rigorous panelist's (this session was Claude) objections directly rewrite final numbers, not just serve as QC — this session's six fatal arithmetic errors + one payment reallocation (breakeven 93% → 86%) all came from its opposition votes.

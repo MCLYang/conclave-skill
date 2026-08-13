@@ -94,17 +94,7 @@ Delivery         → final.md + minutes.md land in 09_deliver/
 
 ## Installation
 
-Clone into your Hermes skills directory:
-
-```bash
-git clone https://github.com/MCLYang/conclave-skill.git ~/.hermes/skills/conclave
-```
-
-Then load in a Hermes session:
-
-```python
-skill_view(name='conclave')
-```
+Install via the Hermes skills hub or clone from the source repository.
 
 ---
 

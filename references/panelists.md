@@ -1,6 +1,6 @@
 # Panelist Roster
 
-Five starting agents + one external advisor. Prepend `no_proxy='*'` to all CLI calls (the local system proxy points to a closed 127.0.0.1:7897; bypassing the proxy is more stable).
+Five starting agents + one external advisor. All CLI calls require `no_proxy='*'` prepended (the local system proxy points to a closed localhost port; bypassing the proxy is more stable).
 
 ## 1. Hermes (Chair & Panelist)
 
@@ -32,19 +32,18 @@ Five starting agents + one external advisor. Prepend `no_proxy='*'` to all CLI c
 
 - Command: `no_proxy='*' GEMINI_CLI_TRUST_WORKSPACE=true zsh -i -c 'gemini -p "<prompt>"'`
 - Pitfall: since 0.55.1 a trust-directory check was added; non-interactive calls must carry `GEMINI_CLI_TRUST_WORKSPACE=true`, otherwise the CLI refuses to run.
-- Auth / env: `GOOGLE_GEMINI_BASE_URL` + `GEMINI_API_KEY` (persisted in ~/.zshrc).
+- Auth / env: `GOOGLE_GEMINI_BASE_URL` + `GEMINI_API_KEY` (persisted in user shell rc).
   Key format determines provider: `AQ.Ab8…` = Google official (base generativelanguage.googleapis.com),
   `sk-…` = cmdme relay. Mixing them causes 401.
-  Note: Hermes persistent bash does not read .zshrc — before calling, run `env | grep -i gemini` to confirm.
-  If missing, use `zsh -i -c 'gemini -p ...'` or explicitly export the variables.
-- Update: `npm install -g @google/gemini-cli@latest`
+  Note: non-interactive shells may not read rc files — call via `zsh -i -c` or explicitly export variables.
+- Update: see official Gemini CLI docs for latest install command.
 - Ping: `no_proxy='*' GEMINI_CLI_TRUST_WORKSPACE=true zsh -i -c 'gemini -p "reply with one word: pong"'`
 
 ## 5. Qwen
 
 - Command: `no_proxy='*' qwen -p '<prompt>'`
 - Binary lives in ~/.local/lib/qwen-code (official installer layout).
-- Update: `bash -c "$(curl -fsSL https://qwen-code-assets.oss-cn-hangzhou.aliyuncs.com/installation/install-qwen.sh)"`
+- Update: see official Qwen docs for latest install command.
 - Ping: `no_proxy='*' qwen -p 'reply with one word: pong'`
 
 ## 6. Manus (External Advisor, async)

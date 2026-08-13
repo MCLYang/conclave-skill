@@ -13,10 +13,18 @@
 |------------|-------------|
 | **Independent Positioning** | Five agents (Hermes, Claude, Codex, Gemini, Qwen) analyze the same brief in parallel, unseen by each other, preventing anchoring. |
 | **Anonymous Rebuttal** | Each agent receives the other four's R1 arguments (anonymized) and must identify at least one fatal flaw plus a concrete alternative solution. |
-| **Structured Convergence** | Chair (Hermes) synthesizes consensus and divergence points after each round; divergence points are sent back for further debate (max 5 rounds). |
+| **Structured Convergence** | Chair (Hermes) synthesizes consensus and divergence points after each round; divergence points are sent back for further debate (dynamic rounds, hard ceiling 8). |
 | **Unanimous Sign-off** | Final draft circulated to all five; any objection must include a specific clause, specific reason, and an executable alternative. No-destruction-without-construction = invalid vote. |
 | **External Audit** | Manus reviews the final draft before delivery; a fatal-level objection triggers an extra round. |
-| **Automatic Archiving** | Every debate gets its own folder; all intermediate files are persisted by round, traceable 3 months later. |
+| **Automatic Archiving** | Every debate gets its own folder; all intermediate files are persisted by round. See **Security & Privacy** below for retention controls. |
+
+## ⚠️ Security & Privacy
+
+- **Data persists locally**: Debates are stored under `~/.hermes/debates/` indefinitely. Do not debate topics containing regulated personal data, trade secrets, or classified information unless you accept this risk.
+- **Data leaves your machine**: Prompts are sent to Claude (Anthropic), Codex (OpenAI), Gemini (Google), and Qwen (Alibaba) cloud APIs. The optional Manus advisor receives the final draft via MCP. Review each provider's data policy.
+- **No password storage**: This skill never prompts for, stores, or logs passwords. The macOS keychain must be unlocked manually by the user in an interactive terminal before background sessions.
+- **Input validation**: Topic slugs are sanitized to 1-32 lowercase letters, digits, and hyphens.
+- **Cleanup**: Run `bash ~/.hermes/skills/conclave/scripts/cleanup.sh [days]` to purge debates older than the retention period. Default is 90 days; use `0` for a dry-run preview.
 
 ---
 

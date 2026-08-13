@@ -11,8 +11,11 @@ Five starting agents + one external advisor. All CLI calls require `no_proxy='*'
 
 - Command: `no_proxy='*' claude -p '<prompt>' --max-turns 1`
 - Auth: official OAuth (zhang@testsprite.com), credentials stored in macOS login keychain.
-  Background sessions may fail to read the keychain (security exit 36) → run
-  `security unlock-keychain -p <password> ~/Library/Keychains/login.keychain-db` first (password provided by user).
+  Background sessions may fail to read the keychain (security exit 36).
+  **DO NOT put passwords in prompts or scripts.** The user must manually unlock the keychain in an interactive terminal before starting a background debate session:
+  ```
+  security unlock-keychain ~/Library/Keychains/login.keychain-db
+  ```
   If still 401: check for and move aside old `~/.claude/.credentials.json`, then retry.
 - Update: `claude update`
 - Ping: `no_proxy='*' claude -p 'reply with one word: pong' --max-turns 1`
@@ -48,6 +51,7 @@ Five starting agents + one external advisor. All CLI calls require `no_proxy='*'
 
 ## 6. Manus (External Advisor, async)
 
+- **Privacy warning**: Sending the final draft and round summaries to Manus transmits user problem statements and internal debate content to a third-party service. Do not use Manus for debates containing proprietary, personal, or regulated data unless you have reviewed Manus's data-handling policy and obtained appropriate consent.
 - Channel: Hermes Manus MCP — `mcp__manus_mcp__create_task` (deferred tool; call tool_describe first, then tool_call).
 - Usage: package the final draft + round-summary synthesis into a prompt and create a task; wait for the result (async, may take minutes to tens of minutes).
 - Timeout 30 min with no response → skip the advisor step; final report notes "external advisor not reviewed".

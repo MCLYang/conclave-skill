@@ -14,6 +14,20 @@ Given a user topic, convene five AI agents to independently posit arguments, eng
 
 Use for high-stakes decisions (pricing structure, contract risk, architecture selection, investment judgment). Do not use for daily trivia.
 
+## ⚠️ Security & Privacy Notice
+
+**Before using Conclave, read this.**
+
+1. **Local data persistence**: Every debate creates a persistent folder under `~/.hermes/debates/` containing the full brief, all agent outputs, anonymity mappings, chair verdicts, and final reports. These files remain on disk indefinitely unless you manually delete them. Do not use Conclave for topics containing regulated personal data, trade secrets, or classified information unless you accept this retention risk.
+
+2. **External data sharing**: Panelists (Claude, Codex, Gemini, Qwen) receive debate prompts via their respective cloud APIs. The external advisor (Manus) receives the final draft and round summaries via MCP. By running a debate, you are transmitting your topic and context to these third-party AI providers. Review each provider's data policy before debating sensitive topics.
+
+3. **Credential handling**: This skill **never** prompts for, stores, or logs passwords. The Claude Code auth section previously referenced an unsafe `security unlock-keychain -p <password>` pattern; this has been removed. Users must manually unlock the macOS keychain in an interactive terminal before background sessions.
+
+4. **Input validation**: The `init_debate.sh` script sanitizes the topic slug to lowercase letters, digits, and hyphens only. Do not pass unsanitized user input directly into shell commands.
+
+5. **Data retention & cleanup**: See `scripts/cleanup.sh` for automated cleanup of debates older than a configurable retention period. Run it periodically or via cron.
+
 ## Roles
 
 | Role | Who | Notes |

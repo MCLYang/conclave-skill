@@ -12,10 +12,11 @@ if [ -z "$TOPIC" ]; then
   exit 1
 fi
 
-# Sanitize: lowercase letters, digits, and hyphens only
+# Sanitize: lowercase letters, digits, and hyphens only; max 32 chars; no leading/trailing hyphens; no consecutive hyphens
 TOPIC=$(echo "$TOPIC" | tr '[:upper:]' '[:lower:]' | tr -cd 'a-z0-9-')
-if [ -z "$TOPIC" ]; then
-  echo "Error: invalid topic slug. Use only lowercase English letters, digits, and hyphens."
+TOPIC=$(echo "$TOPIC" | sed 's/^-*//;s/-*$//;s/--*/-/g')
+if [ -z "$TOPIC" ] || [ "${#TOPIC}" -gt 32 ]; then
+  echo "Error: invalid topic slug. Use 1-32 lowercase English letters, digits, and hyphens. No leading/trailing/consecutive hyphens."
   exit 1
 fi
 

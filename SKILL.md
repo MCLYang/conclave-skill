@@ -1,11 +1,11 @@
 ---
 name: conclave
 description: "Conclave is a multi-agent reasoning skill that orchestrates multiple AI CLIs into structured debates. Each agent independently analyzes the problem, challenges competing arguments, identifies flaws and contradictions, and refines the reasoning through multiple rounds of discussion — helping you reach more reliable conclusions than relying on a single AI."
-version: 1.6.0
+version: 1.6.1
 author: Hermes Agent
 metadata:
   hermes:
-    tags: [Debate, Multi-Agent, Decision, Claude, Codex, Gemini, Qwen, Manus]
+    tags: [Debate, Multi-Agent, Decision, Claude, Codex, Gemini, Qwen, DeepSeek, Doubao, Ark, Manus]
 ---
 
 # Conclave — Multi-Agent Structured Debate & Adjudication
@@ -20,7 +20,7 @@ Use for high-stakes decisions (pricing structure, contract risk, architecture se
 
 1. **Local data persistence**: Every debate creates a persistent folder under `~/.hermes/debates/` containing the full brief, all agent outputs, anonymity mappings, chair verdicts, and final reports. These files remain on disk indefinitely unless you manually delete them. Do not use Conclave for topics containing regulated personal data, trade secrets, or classified information unless you accept this retention risk.
 
-2. **External data sharing**: Panelists (Claude, Codex, Gemini, Qwen) receive debate prompts via their respective cloud APIs. The external advisor (Manus) receives the final draft and round summaries via MCP. By running a debate, you are transmitting your topic and context to these third-party AI providers. Review each provider's data policy before debating sensitive topics.
+2. **External data sharing**: Panelists (Claude, Codex, Gemini, Qwen, DeepSeek, Doubao) receive debate prompts via their respective cloud APIs. The external advisor (Manus) receives the final draft and round summaries via MCP or direct REST polling. By running a debate, you are transmitting your topic and context to these third-party AI providers. Review each provider's data policy before debating sensitive topics.
 
 3. **Credential handling**: This skill **never** prompts for, stores, or logs passwords. The Claude Code auth section previously referenced an unsafe `security unlock-keychain -p <password>` pattern; this has been removed. Users must manually unlock the macOS keychain in an interactive terminal before background sessions.
 
@@ -40,7 +40,7 @@ Use for high-stakes decisions (pricing structure, contract risk, architecture se
 ## Pre-Game (mandatory before the first debate of each skill activation)
 
 0. **Environment check** (first activation, new machine, or after any CLI failure): run `bash ~/.hermes/skills/conclave/scripts/install.sh`
-   - Detects OS (macOS / Linux / WSL / Windows Git Bash) and Node.js/npm + all four CLIs; auto-installs anything missing (brew on macOS, apt/dnf/pacman on Linux, manual instructions on Windows).
+   - Detects OS (macOS / Linux / WSL / Windows Git Bash) and Node.js/npm + all panelist CLIs; auto-installs anything missing (brew on macOS, apt/dnf/pacman on Linux, manual instructions on Windows).
    - Then audits each provider's auth material (existence only — no secrets read) and prints an ACTION checklist.
    - If any `[ACTION]` line appears: **STOP — ask the user to configure that provider's key/OAuth first** (exact steps in `references/panelists.md`). No debate until every provider is configured.
    - `--check-only` audits without installing.
@@ -50,10 +50,10 @@ Use for high-stakes decisions (pricing structure, contract risk, architecture se
 2. **Fill the brief**: write brief.md, mapping.md, and constraints.md under `01_brief/`.
 3. **Version & parameter check**: see `references/panelists.md` (commands, parameters, auth pitfalls for each agent).
 4. **Pre-flight (update + ignition)**: run `bash ~/.hermes/skills/conclave/scripts/preflight.sh <arena-path>`
-   - Phase A: best-effort self-update of all four CLIs (failures are non-fatal and logged; `--skip-update` bypasses).
-   - Phase B: ignition ping of all four agents (plus Manus, verified manually); results are auto-written to `00_preflight/preflight.log`.
+   - Phase A: best-effort self-update of all panelist CLIs (failures are non-fatal and logged; `--skip-update` bypasses).
+   - Phase B: ignition ping of all panelist agents (plus Manus, verified manually); results are auto-written to `00_preflight/preflight.log`.
    - Any ping failure: fix first (key / proxy / version), then debate.
-5. **Launch the debate**: use `terminal(background=true)` to spawn the four CLIs in parallel, writing outputs to `02_r1/`.
+5. **Launch the debate**: use `terminal(background=true)` to spawn the panelist CLIs in parallel, writing outputs to `02_r1/`.
 
 ## Arena Directory (one isolated folder per debate, auto-named)
 
@@ -100,8 +100,8 @@ After receiving the topic and before writing the brief, the chair self-audits: i
 **Step 0 Init**: `bash ~/.hermes/skills/conclave/scripts/init_debate.sh <topic-slug>` → creates `~/.hermes/debates/conclave-YYYYMMDD-<slug>/`. All subsequent files land in this directory.
 
 ```
-R1 Positioning   → 5 agents in parallel, unseen by each other (prevent anchoring). Write to 02_r1/. Chair also writes a position.
-R2 Rebuttal      → Each agent receives the other four's R1 (anonymized). Task: identify ≥1 fatal flaw per opponent + self-defense. Write to 03_r2/.
+R1 Positioning   → agents in parallel, unseen by each other (prevent anchoring). Write to 02_r1/. Chair also writes a position.
+R2 Rebuttal      → Each agent receives the other agents' R1 (anonymized). Task: identify ≥1 fatal flaw per opponent + self-defense. Write to 03_r2/.
 R3+ Convergence  → Chair synthesizes consensus/divergence into 07_verdicts/verdict_rN.md; only divergence points are sent back.
                    Each agent must "concede" or "rebut with evidence"; equivocation is prohibited. Write to 04_r3~08_signoff/.
                    Termination may occur as early as R3 if strategic divergence is resolved and every objection carries an executable alternative.
@@ -184,7 +184,7 @@ round that the compared rule would have cut, AND which later required a
 post-sign-off change.
 
 Sign-off (not counted as a round):
-- Final draft sent to all five agents; each may only reply `Agree` or `Oppose + specific clause + specific reason + own alternative`.
+- Final draft sent to all agents; each may only reply `Agree` or `Oppose + specific clause + specific reason + own alternative`.
 - **Destruction without construction = invalid vote (user-mandated)**: opposition must give an executable alternative; votes lacking one are void, treated as abstentions, and the chair proceeds with the remaining valid votes.
 - Unanimous pass → external advisor review.
 - Opposition & rounds remain → extra round targeting the objection reason and alternative; rounds exhausted → chair adjudicates, alternative appended to minority opinion.
@@ -212,7 +212,7 @@ External Advisor (Manus):
 ## Language Rule (user-mandated)
 
 - The debate language must match the user's current session language. The chair sets this in the brief's `Language` field.
-- All five agents (including the chair) must output in that language; English defaults are overridden.
+- All agents (including the chair) must output in that language; English defaults are overridden.
 - If the user switches language mid-session, the brief is updated and all subsequent rounds follow the new language.
 
 ## Parameter Rules
@@ -220,13 +220,13 @@ External Advisor (Manus):
 - Codex default `-c model_reasoning_effort="medium"` (cost/speed balance); user calls "important session" for xhigh.
 - Codex exec is a read-only sandbox; file writes are rejected → prompts must require "full text to stdout", and the chair extracts from process logs to disk.
 - Claude uses `-p --max-turns 1`; Gemini uses `-p`; Qwen uses `-p`. All non-interactive; no TUI.
-- Prompts for the five agents are identical word-for-word except the role sentence, ensuring fairness.
+- Prompts for the agents are identical word-for-word except the role sentence, ensuring fairness.
 
 ## Deliverables (two items, both mandatory)
 
 ### 1. final.md (decision document, `09_deliver/final.md`)
 1. **First paragraph: dry conclusion**. 3-5 sentences in plain language: what is the final opinion, what to do, one key risk. No fluff, no jargon stacking.
-2. Consensus list (items all five agents agree on).
+2. Consensus list (items all agents agree on).
 3. Divergence & adjudication: each point → each agent's stance (real name disclosed) → chair ruling + reason.
 4. Minority opinions (if any) verbatim appendix.
 5. External advisor opinion and handling result.
@@ -236,7 +236,7 @@ External Advisor (Manus):
 Recap how the debate reached the final report:
 1. Opening: topic + clarification answers / rulings + how each shaped the outcome.
 2. Roster & anonymity mapping (real names disclosed).
-3. Round-by-round evolution: R1 five-way stance comparison → R2 what got killed (who struck) → R3-R5 how divergence closed → sign-off round what each objection turned into.
+3. Round-by-round evolution: R1 multi-way stance comparison → R2 what got killed (who struck) → R3-R5 how divergence closed → sign-off round what each objection turned into.
 4. Kill list: rejected solutions / categories + cause of death + who struck.
 5. Agent contributions & evaluation (real names).
 6. Minority opinion archive.
@@ -302,7 +302,7 @@ The chair MUST follow `references/consensus-protocol-v1.md` (v1.1). Operational 
 2. **Audit-type panelist (e.g., Claude) objection depth increases per round**: structure → parameters → footnotes, always able to dig deeper. The chair must adjudicate closure when "objections have degraded to parameter-level and alternatives are directly absorbable"; otherwise there is no convergence. Closure standard: no strategic-level divergence + all objections have absorbable alternatives.
 3. **`claude -p --max-turns 1` occasionally reports "Reached max turns"**: when retrying per disconnection rules, raise `--max-turns` to 3-10 (add `--allowedTools ''` to prevent spinning); do not stick to the original parameter.
 4. **CLI stdout handling**: CLI stdout mixes ANSI codes and shell startup noise (local shell rc plugin errors); normalize with regex before anonymizing, otherwise read_file may judge the file binary.
-5. **R1 same direction = high-confidence signal**: when five agents independently position unseen, if they independently pick the same direction / same approach, that judgment's credibility maxes out; synthesis can directly promote it to "consensus" without further debate. Conversely, points where R1 diverges are real divergence, worth spending round budget on.
+5. **R1 same direction = high-confidence signal**: when agents independently position unseen, if they independently pick the same direction / same approach, that judgment's credibility maxes out; synthesis can directly promote it to "consensus" without further debate. Conversely, points where R1 diverges are real divergence, worth spending round budget on.
 6. **Session cost & pace expectation**: one full Conclave session (clarification → R1 → R2 → convergence → sign-off × N) is roughly 30-50 CLI calls, 1.5-3 wall-clock hours. Codex medium/low effort is fast enough; Claude long answers may take 10+ minutes per session. Run everything in background parallel + notify_on_complete; the chair writes its own draft while waiting.
 7. **Highest-value use of audit-type panelist**: let the most rigorous panelist's (this session was Claude) objections directly rewrite final numbers, not just serve as QC — this session's six fatal arithmetic errors + one payment reallocation (breakeven 93% → 86%) all came from its opposition votes.
 
@@ -316,13 +316,13 @@ The chair MUST follow `references/consensus-protocol-v1.md` (v1.1). Operational 
 
 ## Field Lessons (2026-08-14 Burry AI-bubble debate)
 
-13. **Assign each panelist their letter explicitly in R2+ prompts**: Asking panelists to "recognize your own R1 stance" in the anonymized bundle failed — three of four CLIs misidentified themselves as Panelist A (the strongest position) in both R2 and R3. The persuasion was genuine, but the minutes had to log an anomaly. Fix: in R2+ prompts, state "You are Panelist X" directly; anonymity is preserved because the mapping file still hides which real CLI is X.
+13. **Assign each panelist their letter explicitly in R2+ prompts**: Asking panelists to "recognize your own R1 stance" in the anonymized bundle failed — three of the panelist CLIs misidentified themselves as Panelist A (the strongest position) in both R2 and R3. The persuasion was genuine, but the minutes had to log an anomaly. Fix: in R2+ prompts, state "You are Panelist X" directly; anonymity is preserved because the mapping file still hides which real CLI is X.
 14. **Chair-fetched live data beats panelist estimates**: The chair pulled real option quotes mid-debate (PLTR 150/120 spread $7.20 vs panelist-estimated $7.00; ORCL 140/110 $10.90 vs estimated $8.00 — a 36% miss). The real numbers directly changed the final contract counts. For any debate touching market/pricing data, the chair should inject a verified data pack into the brief AND re-verify before the final draft.
 15. **A GTC limit order can merge two opposing positions**: "Execute now" vs "wait for a dip" deadlocked until the chair ruled "place the order now at a limit price that only fills on a dip" — both sides' logic satisfied, zero round cost. When two panelists differ only on timing, look for an order-type / trigger mechanism that encodes both.
 
 ## Field Lessons (2026-08-14 Naked-leg supplementary debate)
 
 16. **Manus advisor works via direct REST polling — no webhook needed**: The MCP channel only exposes create_task, but the same API key (MANUS_MCP_API_KEY in config.yaml) works against `https://api.manus.im/v1/tasks` directly: POST to create (`{"prompt": ..., "taskMode": "chat"}`), then GET `/v1/tasks/{task_id}` every 60s until `status == "completed"`; the advisor's answer is in `output[].content[].text` where `role == "assistant"`. Review came back in ~3 minutes with 5 findings (3 absorbed, 1 softened, 1 rejected). This fully replaces the webhook/user-paste fallback on CLI-only machines.
-17. **Explicit role assignment in prompts works**: R2/R3 prompts stating "你是 Panelist X" (lesson 13) eliminated the identity-misrecognition anomaly entirely — all four CLIs defended their own positions.
+17. **Explicit role assignment in prompts works**: R2/R3 prompts stating "你是 Panelist X" (lesson 13) eliminated the identity-misrecognition anomaly entirely — all panelist CLIs defended their own positions.
 18. **A rich data pack changes debate quality**: Providing 3 expiries × multiple strikes of real option quotes + earnings calendar in the brief let panelists do arithmetic kills (e.g., "Nov-20 contract = -70% residual at forced 11-02 exit") instead of opinion wars. For market debates, the data pack IS the debate.
-19. **Users amend mid-debate — route through constraints, not prompts**: The user's mid-turn message ("rolling allowed, must use Manus API") was appended to constraints.md as shared premises rather than editing live round prompts, keeping all five agents on identical instructions.
+19. **Users amend mid-debate — route through constraints, not prompts**: The user's mid-turn message ("rolling allowed, must use Manus API") was appended to constraints.md as shared premises rather than editing live round prompts, keeping all agents on identical instructions.

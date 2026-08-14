@@ -1,8 +1,12 @@
-# Conclave Consensus Protocol v1.0
+# Conclave Consensus Protocol v1.1
 
-Chair-audited revision of the v0.1 architecture proposal. Highest objective: **decision quality, not consensus**.
+Chair-audited revision of the v0.1 architecture proposal, amended by external review (2026-08-14). Highest objective: **maximize decision quality per unit cost — never consensus, never model count, never debate length.**
 
-Status legend: **[CORE]** = implemented in current workflow · **[V1]** = implementable now, added by this protocol · **[L2]** = requires data/infrastructure, deferred · **[HEURISTIC]** = no rigorous basis yet; must be labeled as such in every output.
+Two orthogonal tag systems are used throughout:
+- Implementation status: **[CORE]** current workflow · **[V1]** live now · **[L2]** deferred (needs data/infra)
+- Rigor level: **[FORMAL]** standard statistical theory · **[ESTIMATOR]** needs data · **[HEURISTIC]** engineering proxy · **[POLICY]** human-set rule · **[EXPERIMENTAL]** unvalidated
+
+Every soft number in any Conclave output must carry a rigor tag. Fake precision is the enemy.
 
 ---
 
@@ -43,15 +47,15 @@ Mode selection is declared by the chair in the brief; the user may override.
 
 The chair decomposes positions into atomic claims C₁…Cₙ (target 4–8 claims). For each claim the chair records: supporters, opponents, evidence sources cited, and **source overlap** (two agents citing the same URL/fact = one independent piece of evidence, not two). This replaces the v0.1 "evidence graph" with a flat table the chair can actually maintain in a verdict file.
 
-## 5. Divergence triage [V1] — replaces v0.1 §17
+## 5. Divergence triage [V1] — the Decision Reversal Test [FORMAL as a criterion]
 
 Rank claims by **decision relevance first**:
 
-1. Flip test: if P(Cₖ) moved across its decision threshold, would the recommended action change? If no → deprioritize regardless of disagreement volume.
+1. **Decision Reversal Test**: if Cₖ were proven false, would the optimal action change — a*(C) ≠ a*(¬C)? If a*(C) = a*(¬C), the claim is deprioritized no matter how loud the disagreement, how low the confidence, or how many agents are arguing.
 2. Among decision-relevant claims, sort by divergence (spread of panelist positions).
 3. Among those, sort by whether additional evidence is obtainable at all.
 
-Only the top 1–2 claims enter the next round's prompt. This is the operational form of "find the uncertainty most worth resolving" (v0.1 §18).
+Only the top 1–2 claims enter the next round's prompt. Debate rounds are **information acquisition, not conversation**: each round must target a named uncertainty and end with a verdict on whether that uncertainty materially decreased; if not, the loop stops.
 
 ## 6. Stopping rule [V1] — Decision-Flip Value (DFV), the computable EVSI proxy
 
@@ -64,6 +68,10 @@ Estimation is deliberately crude: chair assigns the flip probability from the di
 ## 7. Manus external advisor [V1 — upgraded by field lesson 16]
 
 Manus is External Advisor, never a voter. Retrieval via direct REST polling (POST/GET api.manus.im/v1/tasks), ~3 min turnaround.
+
+**Two strictly separated modes** (independence rule, v1.1):
+- **Blind Reality Check**: Manus receives ONLY the original question + constraints — never the council's outputs, summaries, or intermediate verdicts. Used when an independent evidence stream is needed. Requested output: facts, sources, counter-evidence, unknowns, and the mandatory field **"what would change the conclusion?"** (feeds directly into the Decision Reversal Test).
+- **Draft Review**: Manus receives the versioned final draft (as in the nakedleg debate). Used only after sign-off. The two modes must never be merged in one task.
 
 Trigger conditions (any one):
 - T1: a decision-relevant claim depends on verifiable real-world facts the council cannot check;
@@ -85,17 +93,40 @@ For binary/probability questions, until calibration data exists:
 2. Normalize weights: ŵᵢ = wᵢ / Σw (prevents extremization).
 3. Correlation discount: N_eff = (Σŵᵢ)² / ΣᵢΣⱼ ŵᵢŵⱼρᵢⱼ with default ρ = 0.6 same-family / 0.3 cross-family **[HEURISTIC]**; report N_eff alongside every pooled number.
 4. Pool in log-odds with prior z₀ = logit(0.5) unless the user supplies a base rate: z* = z₀ + Σŵᵢ(zᵢ − z₀), then p* = σ(z*). Label output "uncalibrated pooled estimate".
-5. **[L2]** When ≥30 resolved verifiable predictions exist: switch to inverse-covariance (GLS) weights from realized error correlations, and fit a recalibration map (Platt or isotonic) on pooled outputs. Not before.
+5. **Phase gates [POLICY]** — no learned weighting before sufficient empirical data exists:
+   - N < 30 resolved predictions: equal weights only.
+   - 30 ≤ N < 100: correlation/calibration research may run offline, but must NOT affect live weights.
+   - N ≥ 100: GLS / BMA / correlation-aware ensembles allowed ONLY after out-of-sample validation against the baselines in §9a. Any aggregation that cannot beat equal-weight out-of-sample does not ship.
+
+## 9a. Permanent baselines [V1, POLICY]
+
+Every debate records two free baselines in the final report: (a) simple majority vote; (b) equal-weight pooled probability. The protocol's value is measured as Performance(Conclave) − Performance(Baseline). If the gap is not positive over time, added complexity is unjustified and must be removed.
 
 ## 10. Verdict schema [V1]
 
 final.md keeps its current mandatory structure (dry conclusion first, consensus list, divergence & adjudication, minority verbatim, advisor handling). Added fields:
 
-- Mode used; N_eff (with heuristic label); claim table with per-claim status (resolved / open / accepted-risk); stopping reason (which rule fired); dissent expected-loss triage results; every heuristic number explicitly tagged.
+- **Decision State block** — five separate lines, never merged: Belief (pooled P, tagged uncalibrated) / Consensus (level) / Confidence (evidence quality) / Decision (action) / Decision Robustness (§10a).
+- Mode used; N_eff [ESTIMATOR with heuristic priors]; claim table with per-claim status (resolved / open / accepted-risk); dissent expected-loss triage results; both baselines (§9a); every soft number carries a rigor tag.
+- **Why-stopped block** [POLICY]: one of the enumerated reasons — (1) critical claims decision-stable; (2) remaining disagreement cannot change the action; (3) external evidence does not contradict; (4) DFV < cost; (5) required evidence unavailable → recommendation DO NOT DECIDE YET; (6) hard ceiling reached.
+
+## 10a. Terminal states and Decision Robustness [V1]
+
+Terminal states (v0.1 §28 extended): STRONG CONSENSUS / CONDITIONAL CONSENSUS / MAJORITY + CRITICAL DISSENT / UNRESOLVED / REJECT / **NO CONSENSUS — INSUFFICIENT EVIDENCE** / **DEBATE_FAILED** (agents disagree because required evidence is unavailable, not because reasoning is insufficient). Emitting NO CONSENSUS or DEBATE_FAILED when it prevents a bad decision is a success, not a failure.
+
+**Decision Robustness** [HEURISTIC]: a small sensitivity table — flip the 2-3 load-bearing assumptions across their plausible ranges (e.g., CAPEX +10%/+20%, demand −10%/−20%) and record where the decision flips. Report HIGH / MEDIUM / LOW robustness with the flip points named. Far more useful than a naked confidence number.
 
 ## 11. Calibration logging [V1]
 
-Every debate appends one JSONL record to `~/.hermes/debates/calibration.jsonl`: debate id, date, and every **verifiable** prediction extracted from the final report (subject, predicted value/range/probability, check date). Only predictions with a defined check date and an observable outcome are recorded. A cron job (or the chair at the next debate) resolves due predictions and computes running Brier/calibration per agent. Non-verifiable judgments are never scored — pretending to score them is worse than not scoring.
+Every debate appends one JSONL record per **verifiable** prediction to `~/.hermes/debates/calibration.jsonl` with fields: prediction_id, question, timestamp, agent, role, probability, resolution_date, ground_truth (filled at resolution), brier_score, log_loss. Only predictions with a defined check date and an observable outcome are recorded. A cron job (or the chair at the next debate) resolves due predictions.
+
+**Dual-track rule [POLICY]**: Track A = verifiable predictions → scored. Track B = strategic judgments ("this strategy is good") → never auto-scored; only post-hoc qualitative review. The system must never refuse hard strategic questions just because they are unscoreable.
+
+## 11a. Research definitions (do NOT implement) [EXPERIMENTAL]
+
+- Marginal Agent Value: MAVᵢ = Q(Council + i) − Q(Council − i). Answers "who adds marginal value" rather than "who is most accurate" (a correlated strong model may be worth less than a weaker but independent one). Research-only until the calibration log can support it.
+- Risk-sensitive decisions (CVaR-style, for P(catastrophe) small-but-unacceptable cases): [L2]. For now, final.md only carries risk metadata (worst-case loss, tail probability) without CVaR machinery.
+- Evidence provenance full schema: keep the lightweight version (source + source_type + date + independently_verified flag); the full schema is deferred.
 
 ## 12. What this protocol deliberately does NOT do
 

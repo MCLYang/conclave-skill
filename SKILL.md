@@ -1,7 +1,7 @@
 ---
 name: conclave
 description: "Conclave is a multi-agent reasoning skill that orchestrates multiple AI CLIs into structured debates. Each agent independently analyzes the problem, challenges competing arguments, identifies flaws and contradictions, and refines the reasoning through multiple rounds of discussion — helping you reach more reliable conclusions than relying on a single AI."
-version: 1.3.1
+version: 1.4.0
 author: Hermes Agent
 metadata:
   hermes:
@@ -277,6 +277,21 @@ diff -r ~/.hermes/debates/conclave-YYYYMMDD-<slug> "$PWD/conclave-YYYYMMDD-<slug
 - Synthesis must not weight a point just because the chair proposed it; chair views struck down must still be recorded under "rejected positions".
 - Rulings must cite round-source evidence (file + line number); no impressions allowed.
 - If the user disagrees with a ruling → the user's word is the supreme arbiter; the chair writes the user's opinion into the final report marked "user adjudication".
+
+## Consensus Protocol v1.0 (2026-08-14, supersedes ad-hoc aggregation)
+
+The chair MUST follow `references/consensus-protocol-v1.md`. Operational deltas from the classic workflow:
+
+1. **Modes**: Quick = 2 CLIs + Hermes; Standard = 4 CLIs + Hermes (default); Deep = blocked until more panelist CLIs exist. Declare the mode in the brief; user may override.
+2. **Structured R1**: prompts require a claims/evidence/assumptions/uncertainties block before free text.
+3. **Claim table**: verdicts must carry a claim-level table with source-overlap dedup (two agents citing one source = one independent evidence).
+4. **Divergence triage**: next-round prompts target only the top 1-2 decision-relevant claims (flip test first, then divergence, then evidence obtainability) — never re-ask whole questions.
+5. **Stopping**: Decision-Flip Value proxy (continue only if an open claim can flip the decision AND its expected loss reduction exceeds round cost); hard floor/ceiling rules remain as guardrails.
+6. **Manus triggers**: verifiable-fact dependence, R1 unanimity (herding check), critical dissent, time-sensitive topics. REST polling path (references/panelists.md).
+7. **Dissent**: expected-loss triage Dᵢ = P(Fᵢ) × Impact(Fᵢ), self-reported P discounted ×0.5 (heuristic); Dᵢ > 10% of value at stake forces a targeted round or Manus check.
+8. **Aggregation**: normalized weights + log-odds pool + N_eff report (default ρ 0.6 same-family / 0.3 cross-family, HEURISTIC); label all pooled probabilities "uncalibrated" until calibration.jsonl has ≥30 resolved predictions.
+9. **Calibration log**: append verifiable predictions only (with check dates) to `~/.hermes/debates/calibration.jsonl`; resolve due entries at the start of each new debate. Never score non-verifiable judgments.
+10. **final.md additions**: mode, N_eff (labeled heuristic), claim table, stopping reason, dissent triage, heuristic tags on every soft number.
 
 ## Field Lessons (2026-08-12 Libya sourcing session)
 

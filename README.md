@@ -1,7 +1,7 @@
 # Conclave
 
 [![Hermes Skill](https://img.shields.io/badge/Hermes-Skill-blue)](https://github.com/MCLYang/conclave-skill)
-[![Version](https://img.shields.io/badge/version-1.6.1-green)]()
+[![Version](https://img.shields.io/badge/version-1.6.2-green)]()
 
 > **Conclave** is a multi-agent reasoning skill that orchestrates multiple AI CLIs into structured debates. Each agent independently analyzes the problem, challenges competing arguments, identifies flaws and contradictions, and refines the reasoning through multiple rounds of discussion — helping you reach more reliable conclusions than relying on a single AI.
 

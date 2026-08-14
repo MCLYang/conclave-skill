@@ -1,11 +1,11 @@
 ---
 name: conclave
 description: "Conclave is a multi-agent reasoning skill that orchestrates multiple AI CLIs into structured debates. Each agent independently analyzes the problem, challenges competing arguments, identifies flaws and contradictions, and refines the reasoning through multiple rounds of discussion — helping you reach more reliable conclusions than relying on a single AI."
-version: 1.6.1
+version: 1.6.2
 author: Hermes Agent
 metadata:
   hermes:
-    tags: [Debate, Multi-Agent, Decision, Claude, Codex, Gemini, Qwen, DeepSeek, Doubao, Ark, Manus]
+    tags: [Debate, Multi-Agent, Decision, Claude, Codex, Gemini, Qwen, DeepSeek, Doubao, Ark, Manus, Install, Update, Export, Archive]
 ---
 
 # Conclave — Multi-Agent Structured Debate & Adjudication
@@ -13,6 +13,19 @@ metadata:
 Given a user topic, convene AI agents to independently posit arguments, engage in anonymous cross-examination, converge, and sign off unanimously, producing a chair-adjudicated final markdown report.
 
 Use for high-stakes decisions (pricing structure, contract risk, architecture selection, investment judgment). Do not use for daily trivia.
+
+## ⚠️ Full Capability Disclosure (read before installing)
+
+This skill does **significantly more** than "debate orchestration". By design it:
+
+- **Installs and updates global CLI tools** (`npm install -g`, brew, apt, etc.) via `scripts/install.sh` and pre-flight self-updates.
+- **Inspects local auth state** (checks for API keys, OAuth tokens, keychain status) without reading secret values.
+- **Transmits your debate topic** to 6 third-party AI cloud APIs (Claude/OpenAI, Google, Alibaba, ByteDance/Ark, Manus).
+- **Persists full debate records** indefinitely under `~/.hermes/debates/` (briefs, raw agent outputs, verdicts, votes).
+- **Mandatorily exports** the entire arena to the current working directory after every debate.
+- **Calls external REST APIs** (Manus `api.manus.im`) with the debate final draft.
+
+**Do not install if** you are not comfortable with global package changes, third-party AI services seeing your content, or full debate archives being retained and copied into your working directory.
 
 ## ⚠️ Security & Privacy Notice
 
@@ -27,6 +40,8 @@ Use for high-stakes decisions (pricing structure, contract risk, architecture se
 4. **Input validation**: The `init_debate.sh` script sanitizes the topic slug to lowercase letters, digits, and hyphens only. Do not pass unsanitized user input directly into shell commands.
 
 5. **Data retention & cleanup**: See `scripts/cleanup.sh` for automated cleanup of debates older than a configurable retention period. Run it periodically or via cron.
+
+6. **Calibration logging**: Verifiable predictions are appended to `~/.hermes/debates/calibration.jsonl` (prediction_id, question, timestamp, agent, role, probability, resolution_date, ground_truth, brier_score, log_loss). This file grows indefinitely. It contains only verifiable predictions, not strategic judgments. Remove it manually if you do not want this persisted.
 
 ## Roles
 
@@ -266,6 +281,7 @@ diff -r ~/.hermes/debates/conclave-YYYYMMDD-<slug> "$PWD/conclave-YYYYMMDD-<slug
 - The diff verification is mandatory; report file count, total size, and the destination absolute path.
 - `~/.hermes/debates/` remains the canonical archive; the working-directory copy is the user's working artifact.
 - If the user only asks for "the results", still export the full arena — briefs, round sources, verdicts, and votes are all part of the deliverable.
+- **Security warning**: the exported arena contains the full raw debate content (briefs, agent outputs, mapping). Do not run Conclave inside directories that are auto-synced to public repositories, cloud backups, or shared drives unless you want that content synchronized. Export to an isolated directory or delete the copy after review.
 
 ### 5. One debate = one self-contained folder; follow-up debates get a NEW folder (user-mandated 2026-08-14)
 

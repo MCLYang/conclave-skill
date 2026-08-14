@@ -1,6 +1,6 @@
 # Panelist Roster
 
-Five starting agents + one external advisor. All CLI calls require `no_proxy='*'` prepended (the local system proxy points to a closed localhost port; bypassing the proxy is more stable).
+Six AI panelists + one external advisor. All CLI calls require `no_proxy='*'` prepended.
 
 ## 1. Hermes (Chair & Panelist)
 
@@ -54,7 +54,41 @@ Five starting agents + one external advisor. All CLI calls require `no_proxy='*'
 - Install: `npm install -g @qwen-code/qwen-code`
 - Ping: `no_proxy='*' qwen -p 'reply with one word: pong'`
 
-## 6. Manus (External Advisor, async)
+## 6. DeepSeek (deepcode-panelist)
+
+- **Note**: The `deepcode` CLI itself is TTY-locked (requires an interactive terminal). For non-interactive / background debates, use the `deepcode-panelist` wrapper instead.
+- Command: `deepcode-panelist '<prompt>'`
+- Wrapper path: `/Users/mac/.local/bin/deepcode-panelist`
+- What it does: reads `~/.deepcode/settings.json` (model, API key, base URL, reasoning effort), then calls the Ark Responses API directly — same backend as the TUI, zero ANSI overhead, pure text output.
+- Config source (`~/.deepcode/settings.json`):
+  ```json
+  {
+    "env": {
+      "MODEL": "deepseek-v4-flash-ga-260731",
+      "BASE_URL": "https://ark.cn-beijing.volces.com/api/v3",
+      "API_KEY": "ark-..."
+    },
+    "thinkingEnabled": true,
+    "reasoningEffort": "max"
+  }
+  ```
+- Output: model text to stdout; reasoning chain + usage metadata to stderr.
+- Install wrapper (one-time):
+  ```bash
+  # The wrapper is a shell script; copy it to PATH
+  cp /path/to/deepcode-panelist /Users/mac/.local/bin/
+  chmod +x /Users/mac/.local/bin/deepcode-panelist
+  ```
+- Install deepcode (for config generation + interactive use):
+  ```bash
+  npm i -g deepcode
+  deepcode --version   # v0.1.34
+  # Then run interactively once to create ~/.deepcode/settings.json
+  ```
+- Ping: `deepcode-panelist 'reply with one word: pong'`
+- Pitfall: `deepcode -p` without the wrapper fails with "requires an interactive terminal (TTY)" — this is by design in the upstream CLI. The wrapper is the canonical non-interactive path.
+
+## 7. Manus (External Advisor, async)
 
 - **Privacy warning**: Sending the final draft and round summaries to Manus transmits user problem statements and internal debate content to a third-party service. Do not use Manus for debates containing proprietary, personal, or regulated data unless you have reviewed Manus's data-handling policy and obtained appropriate consent.
 - Channel: Hermes Manus MCP — `mcp__manus_mcp__create_task` (deferred tool; call tool_describe first, then tool_call).

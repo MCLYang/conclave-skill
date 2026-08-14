@@ -1,7 +1,7 @@
 ---
 name: conclave
 description: "Conclave is a multi-agent reasoning skill that orchestrates multiple AI CLIs into structured debates. Each agent independently analyzes the problem, challenges competing arguments, identifies flaws and contradictions, and refines the reasoning through multiple rounds of discussion — helping you reach more reliable conclusions than relying on a single AI."
-version: 1.5.0
+version: 1.6.0
 author: Hermes Agent
 metadata:
   hermes:
@@ -10,7 +10,7 @@ metadata:
 
 # Conclave — Multi-Agent Structured Debate & Adjudication
 
-Given a user topic, convene five AI agents to independently posit arguments, engage in anonymous cross-examination, converge, and sign off unanimously, producing a chair-adjudicated final markdown report.
+Given a user topic, convene AI agents to independently posit arguments, engage in anonymous cross-examination, converge, and sign off unanimously, producing a chair-adjudicated final markdown report.
 
 Use for high-stakes decisions (pricing structure, contract risk, architecture selection, investment judgment). Do not use for daily trivia.
 
@@ -33,7 +33,7 @@ Use for high-stakes decisions (pricing structure, contract risk, architecture se
 | Role | Who | Notes |
 |------|-----|-------|
 | Chair & Panelist | Hermes (this agent) | Moderates the session and also argues; must be impartial and must not favor any side (including itself) |
-| Panelists | Claude / Codex / Gemini / Qwen | Four starting CLIs, plus Hermes makes five |
+| Panelists | Claude / Codex / Gemini / Qwen / DeepSeek / Doubao | Six CLIs covering reasoning, audit, research, China, coding, and generative domains |
 | External Advisor | Manus (MCP API, async) | Does not join regular rounds; reviews the final draft before sign-off; fatal-level objections give the chair the right to call an extra round |
 | User | Human | Reviews only the final report; the anonymity mapping is transparent to the user (the user has the right to know who is who) |
 
@@ -70,7 +70,7 @@ Use for high-stakes decisions (pricing structure, contract risk, architecture se
 |------|---------|
 | `00_preflight/` | Pre-flight ping results |
 | `01_brief/` | Brief + anonymity mapping + user constraints |
-| `02_r1/` | R1 positioning (5 agents) |
+| `02_r1/` | R1 positioning (all mode-dependent panelists in parallel) |
 | `03_r2/` | R2 rebuttals |
 | `04_r3/` | Convergence round 3 |
 | `05_r4/` | Convergence round 4 |
@@ -91,7 +91,7 @@ Use for high-stakes decisions (pricing structure, contract risk, architecture se
 After receiving the topic and before writing the brief, the chair self-audits: is the topic ambiguous? Is any key constraint missing from the background?
 - Any unclear point / multiple reasonable interpretations → **ask the user first; no debate until answered**.
 - Questions must be multiple-choice (clarify tool, 2-4 options + Other); never make the user do essay questions; ask at most 4 critical ones at a time.
-- After the user answers, write brief.md; the user's answers go into the brief's "Constraints" section as shared premises for all five agents.
+- After the user answers, write brief.md; the user's answers go into the brief's "Constraints" section as shared premises for all agents.
 - If a trajectory-altering question arises mid-debate (e.g., a divergence hinges on a fact only the user knows) → the chair may pause, ask the user via clarify, append the answer to the brief, and resume.
 - Do not force questions when there are none — if the topic is already clear, debate immediately; do not ritualize clarification.
 
@@ -282,7 +282,7 @@ diff -r ~/.hermes/debates/conclave-YYYYMMDD-<slug> "$PWD/conclave-YYYYMMDD-<slug
 
 The chair MUST follow `references/consensus-protocol-v1.md` (v1.1). Operational deltas from the classic workflow:
 
-1. **Modes**: Quick = 2 CLIs + Hermes; Standard = 4 CLIs + Hermes (default); Deep = blocked until more panelist CLIs exist. Declare the mode in the brief; user may override.
+1. **Modes**: Quick = 2 CLIs + Hermes (Claude + Gemini); Standard = 4 CLIs + Hermes (Claude/Codex/Gemini/Qwen); Deep = 6 CLIs + Hermes (all panelists). Declare the mode in the brief; user may override.
 2. **Structured R1**: prompts require a claims/evidence/assumptions/uncertainties block before free text.
 3. **Claim table**: verdicts must carry a claim-level table with source-overlap dedup (two agents citing one source = one independent evidence).
 4. **Divergence triage**: next-round prompts target only the top 1-2 decision-relevant claims (flip test first, then divergence, then evidence obtainability) — never re-ask whole questions.

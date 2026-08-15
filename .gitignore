@@ -1,0 +1,6 @@
+# Runtime debate archives — never ship real debate content in the public skill
+debates/
+# Calibration log grows indefinitely, may contain topic-derived predictions
+*.jsonl
+# Vendor SDK example dumps (contain live endpoint ids); not part of the skill
+ark-examples/

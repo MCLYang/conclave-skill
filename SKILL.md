@@ -1,7 +1,7 @@
 ---
 name: conclave
 description: "Conclave is a multi-agent reasoning skill that orchestrates multiple AI CLIs into structured debates. Each agent independently analyzes the problem, challenges competing arguments, identifies flaws and contradictions, and refines the reasoning through multiple rounds of discussion — helping you reach more reliable conclusions than relying on a single AI."
-version: 1.6.6
+version: 1.6.7
 author: Hermes Agent
 metadata:
   hermes:
@@ -270,6 +270,7 @@ External Advisor (Manus):
   - Otherwise, use an identical retry.
 - Second consecutive failure → mark that agent **absent for that round**. Debate continues; final report notes absent party and reason; fix after the session, restore for the next debate.
 - Chair (Hermes) never disconnects; Manus advisor timeout 30 min → skip advisor, final report notes "external advisor not reviewed".
+- **WAIT FOR ALL PANELISTS BEFORE THE FINAL STEP (user-mandated 2026-08-16).** Do NOT run the convergence verdict / final draft / sign-off / deliverables until every panelist's output for the round has actually arrived (or been formally marked absent after 2 failures per the rule above). Slow panelists — especially Doubao seed models (300-600s, frequent first-try timeout) and DeepSeek — must be waited out with `process(action='wait')`, not skipped early. Closing the round while a panelist is still legitimately in flight is a process violation: their content can change the verdict, and you will have to redo the final step. "Slow" ≠ "absent": absent requires 2 real failures, not just being late.
 
 ## Language Rule (user-mandated)
 
@@ -394,4 +395,9 @@ The chair MUST follow `references/consensus-protocol-v1.md` (v1.1). Operational 
 
 20. **A follow-up/sub-debate is a NEW arena, never a subfolder of the old one (violation + fix).** When the user asked to re-evaluate one SKU (surgical instruments) after the main debate closed, the chair wrongly created `conclave-20260815-medv9/10_subdebate_surgical/` inside the frozen main arena. This breaks §5 "follow-up debates get a NEW folder": the old arena must stay frozen as history, and the new debate must be self-contained. Fix: run `init_debate.sh <slug>` for a fresh `conclave-YYYYMMDD-<newslug>/`, move ALL sub-debate files into its standard dirs (task→02_r1/r1_task.md, each panelist→02_r1/, verdict→07_verdicts/verdict_r1.md, decision→09_deliver/final.md+minutes.md, +index.md), put the prior arena's absolute path in the new brief under "Prior debate", delete the wrongly-placed subfolder from BOTH the canonical archive and the working-directory export, then export the new arena fresh. Rule of thumb: if you're about to `mkdir` anything other than the 10 standard dirs inside an arena, STOP — you want a new arena instead.
 21. **Brief sign-off gate (see the dedicated section).** Even a single-SKU sub-debate must show its brief to the user for go/no-go before launching R1. Skipping it risks running the whole sub-debate on a premise the user would have corrected in one sentence.
-22. **A sub-debate can legitimately compress the workflow but still owes full deliverables.** A single parametric sub-question can be R1-only (independent positioning) + chair convergence, skipping anonymous R2/sign-off/Manus — but it still must land final.md + minutes.md + index.md in its own arena, and its result must be back-filled into the parent debate's final.md (with a pointer), so the parent stays the single source of truth.
+22. **A sub-debate can legitimately compress the workflow but still owes full deliverables.** A single parametric sub-question can be R1-only (independent positioning) + chair convergence, skipping anonymous R2/sign-off/Manus — but it still must land final.md + minutes.md + index.md in its OWN new arena. Do NOT back-fill the result into the parent's final.md in place (see lesson 23); if a merged view is wanted, write it to a NEW file. The sub-debate arena + a pointer is the record; the parent stays frozen.
+
+## Field Lessons (2026-08-16 Surgical RE-debate — repeat violations, user escalated)
+
+23. **NEVER edit a prior debate's files — this was violated TWICE and the user escalated.** When a follow-up debate produces a result that affects the parent plan, the temptation is to edit the parent's final.md in place. DO NOT. The parent arena is frozen history. Correct pattern: (a) the follow-up lives entirely in its own new arena; (b) if the user wants a merged/updated plan, create a NEW file (e.g. `final_vN+1.md` or a fresh merged arena) and paste the combined result there, leaving the old final.md untouched. Only edit the parent's file if the user explicitly says to. Rule of thumb: after any follow-up debate, ask "does the user want the parent updated in place, or a new merged file?" — default to a new file. (First violation: sub-debate placed as a subfolder. Second violation: back-filled edits into the parent final.md without being asked. Both drew explicit user correction.)
+24. **"Wait for all panelists" applies doubly to the final step (see Disconnection Rules).** In this same session the chair issued the convergence verdict before Doubao's (slow) output had arrived, treating late as absent. Late ≠ absent. Wait with `process(action='wait')` until every panelist's file is non-empty or has 2 logged failures, THEN converge.

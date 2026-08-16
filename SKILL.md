@@ -1,7 +1,7 @@
 ---
 name: conclave
 description: "Conclave is a multi-agent reasoning skill that orchestrates multiple AI CLIs into structured debates. Each agent independently analyzes the problem, challenges competing arguments, identifies flaws and contradictions, and refines the reasoning through multiple rounds of discussion — helping you reach more reliable conclusions than relying on a single AI."
-version: 1.6.4
+version: 1.6.5
 author: Hermes Agent
 metadata:
   hermes:
@@ -51,6 +51,37 @@ This skill does **significantly more** than "debate orchestration". By design it
 | Panelists | Claude / Codex / Gemini / Qwen / DeepSeek / Doubao | Six CLIs covering reasoning, audit, research, China, coding, and generative domains |
 | External Advisor | Manus (MCP API, async) | Does not join regular rounds; reviews the final draft before sign-off; fatal-level objections give the chair the right to call an extra round |
 | User | Human | Reviews only the final report; the anonymity mapping is transparent to the user (the user has the right to know who is who) |
+
+## Prerequisites (what the user must install / configure before first use)
+
+`scripts/install.sh` auto-installs Node.js and the four npm-based CLIs and audits their auth, but it does NOT cover the two extra Deep-mode panelists, the external advisor, or the shell utilities the round scripts depend on. Install and configure everything below before the first debate. Nothing here is optional for Deep mode; Standard mode needs only items 1-2 + the first four panelists.
+
+### 0. System dependencies
+- **Node.js >= 18 + npm** — runtime for four of the panelist CLIs. `install.sh` installs it via brew/apt/dnf/pacman/winget where possible.
+- **python3** — used by the round scripts to parse JSON API responses (Doubao/Manus). Ships with macOS/most Linux; on minimal systems install it.
+- **jq** — used to JSON-escape long prompts before sending to HTTP APIs. Install via brew/apt if missing.
+- **git** — only if you publish/sync the skill; not needed to run debates.
+
+### 1. Four npm CLIs (auto-installed by install.sh)
+| Panelist | Package | Auth the user must complete |
+|----------|---------|------------------------------|
+| Claude Code | `@anthropic-ai/claude-code` | Run `claude` once interactively, finish OAuth login. On macOS, unlock the login keychain in an interactive terminal before background debates. |
+| Codex | `@openai/codex` | Put the API key in Codex's `auth.json` and set base_url/wire_api in its `config.toml` (see references/panelists.md). |
+| Gemini CLI | `@google/gemini-cli` | Export `GEMINI_API_KEY` (and base URL if using a relay) in your shell rc. Key prefix decides the provider — do not mix official and relay keys. |
+| Qwen | `@qwen-code/qwen-code` | Run `qwen` once interactively to log in, or export the API key/base URL in your shell rc. |
+
+Run `bash ~/.hermes/skills/conclave/scripts/install.sh` (or `--check-only`) to install these and print an auth checklist. Any `[ACTION]` line = the user must fix that provider before debating.
+
+### 2. Two extra panelists for Deep mode (NOT covered by install.sh — install manually)
+- **DeepSeek** — the upstream `deepcode` CLI is TTY-locked, so debates use a non-interactive **`deepcode-panelist` wrapper** on the user's PATH. Setup: `npm i -g deepcode`, run it once interactively to generate its settings file (model + API key + base URL + reasoning effort), then place the wrapper script on PATH and make it executable. Config lives in the deepcode settings file. See references/panelists.md §6 for the wrapper and known-good defaults (effort=medium, max_output_tokens, proxy bypass).
+- **Doubao (Volcengine Ark)** — `npm i -g @volcengine/ark-cli`, then `arkcli auth login volc-sso` (SSO device flow; the picker needs an interactive PTY). This writes an API key to the arkcli config file. Debates call the Ark Chat Completions REST endpoint directly with the **turbo** model. See the `volcengine-ark` skill for auth pitfalls and the safe-call recipe.
+
+### 3. External advisor (Manus) — no install, one key
+- Manus runs over the Hermes MCP channel + direct REST; there is no local CLI to install.
+- The user must have `MANUS_MCP_API_KEY` set in the Hermes config so the chair can create/poll advisor tasks. Without it, the debate still completes but the final report notes "external advisor not reviewed".
+
+### 4. Proxy note
+- All panelist calls must bypass any local proxy (Clash/V2Ray etc.). The round scripts already prepend the proxy-bypass env/flags; if you run a call by hand, add the same bypass or long HTTPS calls will be killed.
 
 ## Pre-Game (mandatory before the first debate of each skill activation)
 

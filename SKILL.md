@@ -1,7 +1,7 @@
 ---
 name: conclave
 description: "Conclave is a multi-agent reasoning skill that orchestrates multiple AI CLIs into structured debates. Each agent independently analyzes the problem, challenges competing arguments, identifies flaws and contradictions, and refines the reasoning through multiple rounds of discussion — helping you reach more reliable conclusions than relying on a single AI."
-version: 1.6.2
+version: 1.6.3
 author: Hermes Agent
 metadata:
   hermes:
@@ -115,7 +115,7 @@ After receiving the topic and before writing the brief, the chair self-audits: i
 **After writing brief.md and BEFORE launching R1, the chair MUST show the brief to the user and get explicit approval to proceed.** The brief is the shared premise every panelist argues from — a wrong or incomplete brief poisons the entire debate (all panelists faithfully propagate a bad premise; you only discover it after 30-50 CLI calls). Writing the brief is NOT permission to start.
 
 - Paste the brief's key sections (topic, data pack, constraints, mode) into the reply, or give the path and ask the user to read it.
-- Ask a direct go/no-go via clarify (确认开跑 R1 / 要改). No R1 launch until the user says go.
+- Ask a direct go/no-go via clarify (approve-and-launch-R1 / needs-edits). No R1 launch until the user says go.
 - If the user corrects anything, update brief.md, re-show, re-confirm.
 - Applies to EVERY debate including follow-up/supplementary/sub-debates. Separate from the Clarification Phase: clarification fills gaps in the topic; this gate confirms the assembled brief is correct before spending the CLI budget.
 - No exception — even an "obvious" topic gets a 10-second brief confirmation; it is far cheaper than a poisoned debate.
@@ -349,7 +349,7 @@ The chair MUST follow `references/consensus-protocol-v1.md` (v1.1). Operational 
 ## Field Lessons (2026-08-14 Naked-leg supplementary debate)
 
 16. **Manus advisor works via direct REST polling — no webhook needed**: The MCP channel only exposes create_task, but the same API key (MANUS_MCP_API_KEY in config.yaml) works against `https://api.manus.im/v1/tasks` directly: POST to create (`{"prompt": ..., "taskMode": "chat"}`), then GET `/v1/tasks/{task_id}` every 60s until `status == "completed"`; the advisor's answer is in `output[].content[].text` where `role == "assistant"`. Review came back in ~3 minutes with 5 findings (3 absorbed, 1 softened, 1 rejected). This fully replaces the webhook/user-paste fallback on CLI-only machines.
-17. **Explicit role assignment in prompts works**: R2/R3 prompts stating "你是 Panelist X" (lesson 13) eliminated the identity-misrecognition anomaly entirely — all panelist CLIs defended their own positions.
+17. **Explicit role assignment in prompts works**: R2/R3 prompts stating "You are Panelist X" (lesson 13) eliminated the identity-misrecognition anomaly entirely — all panelist CLIs defended their own positions.
 18. **A rich data pack changes debate quality**: Providing 3 expiries × multiple strikes of real option quotes + earnings calendar in the brief let panelists do arithmetic kills (e.g., "Nov-20 contract = -70% residual at forced 11-02 exit") instead of opinion wars. For market debates, the data pack IS the debate.
 19. **Users amend mid-debate — route through constraints, not prompts**: The user's mid-turn message ("rolling allowed, must use Manus API") was appended to constraints.md as shared premises rather than editing live round prompts, keeping all agents on identical instructions.
 

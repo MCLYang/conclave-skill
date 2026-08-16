@@ -1,7 +1,7 @@
 ---
 name: conclave
 description: "Conclave is a multi-agent reasoning skill that orchestrates multiple AI CLIs into structured debates. Each agent independently analyzes the problem, challenges competing arguments, identifies flaws and contradictions, and refines the reasoning through multiple rounds of discussion — helping you reach more reliable conclusions than relying on a single AI."
-version: 1.6.3
+version: 1.6.2
 author: Hermes Agent
 metadata:
   hermes:
@@ -109,6 +109,16 @@ After receiving the topic and before writing the brief, the chair self-audits: i
 - After the user answers, write brief.md; the user's answers go into the brief's "Constraints" section as shared premises for all agents.
 - If a trajectory-altering question arises mid-debate (e.g., a divergence hinges on a fact only the user knows) → the chair may pause, ask the user via clarify, append the answer to the brief, and resume.
 - Do not force questions when there are none — if the topic is already clear, debate immediately; do not ritualize clarification.
+
+## Brief Sign-off Gate (mandatory, user-mandated 2026-08-16)
+
+**After writing brief.md and BEFORE launching R1, the chair MUST show the brief to the user and get explicit approval to proceed.** The brief is the shared premise every panelist argues from — a wrong or incomplete brief poisons the entire debate (all panelists faithfully propagate a bad premise; you only discover it after 30-50 CLI calls). Writing the brief is NOT permission to start.
+
+- Paste the brief's key sections (topic, data pack, constraints, mode) into the reply, or give the path and ask the user to read it.
+- Ask a direct go/no-go via clarify (确认开跑 R1 / 要改). No R1 launch until the user says go.
+- If the user corrects anything, update brief.md, re-show, re-confirm.
+- Applies to EVERY debate including follow-up/supplementary/sub-debates. Separate from the Clarification Phase: clarification fills gaps in the topic; this gate confirms the assembled brief is correct before spending the CLI budget.
+- No exception — even an "obvious" topic gets a 10-second brief confirmation; it is far cheaper than a poisoned debate.
 
 ## Workflow (dynamic rounds, auto-partitioned into directories)
 
@@ -342,3 +352,9 @@ The chair MUST follow `references/consensus-protocol-v1.md` (v1.1). Operational 
 17. **Explicit role assignment in prompts works**: R2/R3 prompts stating "你是 Panelist X" (lesson 13) eliminated the identity-misrecognition anomaly entirely — all panelist CLIs defended their own positions.
 18. **A rich data pack changes debate quality**: Providing 3 expiries × multiple strikes of real option quotes + earnings calendar in the brief let panelists do arithmetic kills (e.g., "Nov-20 contract = -70% residual at forced 11-02 exit") instead of opinion wars. For market debates, the data pack IS the debate.
 19. **Users amend mid-debate — route through constraints, not prompts**: The user's mid-turn message ("rolling allowed, must use Manus API") was appended to constraints.md as shared premises rather than editing live round prompts, keeping all agents on identical instructions.
+
+## Field Lessons (2026-08-16 Surgical sub-debate — two process violations)
+
+20. **A follow-up/sub-debate is a NEW arena, never a subfolder of the old one (violation + fix).** When the user asked to re-evaluate one SKU (surgical instruments) after the main debate closed, the chair wrongly created `conclave-20260815-medv9/10_subdebate_surgical/` inside the frozen main arena. This breaks §5 "follow-up debates get a NEW folder": the old arena must stay frozen as history, and the new debate must be self-contained. Fix: run `init_debate.sh <slug>` for a fresh `conclave-YYYYMMDD-<newslug>/`, move ALL sub-debate files into its standard dirs (task→02_r1/r1_task.md, each panelist→02_r1/, verdict→07_verdicts/verdict_r1.md, decision→09_deliver/final.md+minutes.md, +index.md), put the prior arena's absolute path in the new brief under "Prior debate", delete the wrongly-placed subfolder from BOTH the canonical archive and the working-directory export, then export the new arena fresh. Rule of thumb: if you're about to `mkdir` anything other than the 10 standard dirs inside an arena, STOP — you want a new arena instead.
+21. **Brief sign-off gate (see the dedicated section).** Even a single-SKU sub-debate must show its brief to the user for go/no-go before launching R1. Skipping it risks running the whole sub-debate on a premise the user would have corrected in one sentence.
+22. **A sub-debate can legitimately compress the workflow but still owes full deliverables.** A single parametric sub-question can be R1-only (independent positioning) + chair convergence, skipping anonymous R2/sign-off/Manus — but it still must land final.md + minutes.md + index.md in its own arena, and its result must be back-filled into the parent debate's final.md (with a pointer), so the parent stays the single source of truth.

@@ -1,7 +1,7 @@
 ---
 name: conclave
 description: "Conclave is a multi-agent reasoning skill that orchestrates multiple AI CLIs into structured debates. Each agent independently analyzes the problem, challenges competing arguments, identifies flaws and contradictions, and refines the reasoning through multiple rounds of discussion — helping you reach more reliable conclusions than relying on a single AI."
-version: 1.6.5
+version: 1.6.6
 author: Hermes Agent
 metadata:
   hermes:
@@ -73,8 +73,14 @@ This skill does **significantly more** than "debate orchestration". By design it
 Run `bash ~/.hermes/skills/conclave/scripts/install.sh` (or `--check-only`) to install these and print an auth checklist. Any `[ACTION]` line = the user must fix that provider before debating.
 
 ### 2. Two extra panelists for Deep mode (NOT covered by install.sh — install manually)
+
+> **⚠️ Known-issues warning (verified 2026-08-16): the two Deep-mode-only panelists are the least reliable links in the chain.**
+> - **Doubao (seed models) responds very slowly** — the `doubao-seed-*` models can take 300-600s per long prompt and frequently time out on the first try (needs a retry), stalling the round. The turbo model is the only workable one for automated calls, and even it is slow.
+> - **DeepSeek (deepcode) needs manual configuration** — the wrapper + settings file must be set up by hand before it works at all (see below); a fresh machine will not have it.
+> - **If the experience is poor, just drop them: run Standard mode (4 CLIs: Claude/Codex/Gemini/Qwen + chair) instead of Deep.** The debate is fully valid without Doubao/DeepSeek — declare the reduced roster in the brief. Do not let two flaky panelists block or slow the whole session; a clean 4-panelist debate beats a stalled 6-panelist one.
+
 - **DeepSeek** — the upstream `deepcode` CLI is TTY-locked, so debates use a non-interactive **`deepcode-panelist` wrapper** on the user's PATH. Setup: `npm i -g deepcode`, run it once interactively to generate its settings file (model + API key + base URL + reasoning effort), then place the wrapper script on PATH and make it executable. Config lives in the deepcode settings file. See references/panelists.md §6 for the wrapper and known-good defaults (effort=medium, max_output_tokens, proxy bypass).
-- **Doubao (Volcengine Ark)** — `npm i -g @volcengine/ark-cli`, then `arkcli auth login volc-sso` (SSO device flow; the picker needs an interactive PTY). This writes an API key to the arkcli config file. Debates call the Ark Chat Completions REST endpoint directly with the **turbo** model. See the `volcengine-ark` skill for auth pitfalls and the safe-call recipe.
+- **Doubao (Volcengine Ark)** — `npm i -g @volcengine/ark-cli`, then `arkcli auth login volc-sso` (SSO device flow; the picker needs an interactive PTY). This writes an API key to the arkcli config file. Debates call the Ark Chat Completions REST endpoint directly with the **turbo** model (never the reasoning/seed model in automated calls — it times out). See the `volcengine-ark` skill for auth pitfalls and the safe-call recipe.
 
 ### 3. External advisor (Manus) — no install, one key
 - Manus runs over the Hermes MCP channel + direct REST; there is no local CLI to install.
